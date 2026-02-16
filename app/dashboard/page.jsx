@@ -22,7 +22,8 @@ import {
   UserCog,
   CheckCircle,
   XCircle,
-  AlertCircle
+  AlertCircle,
+  RefreshCw
 } from 'lucide-react'
 import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend } from 'recharts'
 
@@ -38,9 +39,16 @@ export default function Dashboard() {
 
   useEffect(() => {
     fetchUser()
-    fetchNotificaciones()
-    fetchDashboardData()
   }, [])
+
+  useEffect(() => {
+    if (user) {
+      fetchNotificaciones()
+      fetchDashboardData()
+      const interval = setInterval(fetchNotificaciones, 30000)
+      return () => clearInterval(interval)
+    }
+  }, [user])
 
   const fetchUser = async () => {
     try {
@@ -75,8 +83,8 @@ export default function Dashboard() {
       const res = await fetch('/api/notificaciones')
       if (res.ok) {
         const data = await res.json()
-        setNotificaciones(data.notificaciones)
-        setNotifSinLeer(data.sinLeer)
+        setNotificaciones(data.notificaciones || [])
+        setNotifSinLeer(data.sinLeer || 0)
       }
     } catch (error) {
       console.error('Error:', error)
@@ -227,14 +235,23 @@ export default function Dashboard() {
                 <div className="absolute right-0 top-full mt-2 w-80 bg-slate-900 border border-green-500/30 rounded-xl shadow-xl z-50 overflow-hidden">
                   <div className="p-3 border-b border-green-500/20 flex items-center justify-between">
                     <h3 className="text-white font-medium">Notificaciones</h3>
-                    {notifSinLeer > 0 && (
+                    <div className="flex items-center gap-2">
                       <button 
-                        onClick={marcarTodasLeidas}
-                        className="text-xs text-green-400 hover:text-green-300"
+                        onClick={fetchNotificaciones}
+                        className="p-1 hover:bg-slate-700 rounded-lg transition-colors"
+                        title="Actualizar"
                       >
-                        Marcar todo leído
+                        <RefreshCw size={14} className="text-green-400" />
                       </button>
-                    )}
+                      {notifSinLeer > 0 && (
+                        <button 
+                          onClick={marcarTodasLeidas}
+                          className="text-xs text-green-400 hover:text-green-300"
+                        >
+                          Marcar todo leído
+                        </button>
+                      )}
+                    </div>
                   </div>
                   <div className="max-h-80 overflow-y-auto">
                     {notificaciones.length > 0 ? (
