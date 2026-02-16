@@ -15,6 +15,7 @@ async function verifyAuth(request) {
 }
 
 export async function GET(request, { params }) {
+  const { id } = await params
   try {
     const user = await verifyAuth(request)
     if (!user) {
@@ -22,7 +23,7 @@ export async function GET(request, { params }) {
     }
 
     const equipo = await prisma.equipoTelecom.findUnique({
-      where: { id: parseInt(params.id) },
+      where: { id: parseInt(id) },
     })
 
     if (!equipo) {
@@ -36,6 +37,7 @@ export async function GET(request, { params }) {
 }
 
 export async function PUT(request, { params }) {
+  const { id } = await params
   try {
     const user = await verifyAuth(request)
     if (!user) {
@@ -45,7 +47,7 @@ export async function PUT(request, { params }) {
     const data = await request.json()
 
     const equipo = await prisma.equipoTelecom.update({
-      where: { id: parseInt(params.id) },
+      where: { id: parseInt(id) },
       data: {
         tipo: data.tipo,
         marca: data.marca,
@@ -66,6 +68,7 @@ export async function PUT(request, { params }) {
 }
 
 export async function DELETE(request, { params }) {
+  const { id } = await params
   try {
     const user = await verifyAuth(request)
     if (!user || user.rol !== 'Administrador') {
@@ -73,7 +76,7 @@ export async function DELETE(request, { params }) {
     }
 
     await prisma.equipoTelecom.delete({
-      where: { id: parseInt(params.id) },
+      where: { id: parseInt(id) },
     })
 
     return NextResponse.json({ success: true })

@@ -44,7 +44,7 @@ export default function AudiovisualesPage() {
 
   const fetchEquipos = async () => {
     try {
-      const res = await fetch('/api/audiovisuales')
+      const res = await fetch('/api/audiovisuales', { credentials: 'include' })
       if (res.ok) {
         const data = await res.json()
         setEquipos(data)

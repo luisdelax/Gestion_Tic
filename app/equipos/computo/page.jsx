@@ -70,8 +70,8 @@ export default function EquiposComputoPage() {
   const fetchData = async () => {
     try {
       const [eqRes, funcRes] = await Promise.all([
-        fetch('/api/equipos/computo'),
-        fetch('/api/funcionarios')
+        fetch('/api/equipos/computo', { credentials: 'include' }),
+        fetch('/api/funcionarios', { credentials: 'include' })
       ])
       
       if (eqRes.ok) setEquipos(await eqRes.json())

@@ -15,6 +15,7 @@ async function verifyAuth(request) {
 }
 
 export async function GET(request, { params }) {
+  const { id } = await params
   try {
     const user = await verifyAuth(request)
     if (!user) {
@@ -22,7 +23,7 @@ export async function GET(request, { params }) {
     }
 
     const prestamo = await prisma.prestamo.findUnique({
-      where: { id: parseInt(params.id) },
+      where: { id: parseInt(id) },
       include: {
         usuario: { select: { id: true, nombre: true, apellido: true } },
         equipoComputo: true,
@@ -42,6 +43,7 @@ export async function GET(request, { params }) {
 }
 
 export async function PUT(request, { params }) {
+  const { id } = await params
   try {
     const user = await verifyAuth(request)
     if (!user) {
@@ -51,7 +53,7 @@ export async function PUT(request, { params }) {
     const data = await request.json()
 
     const prestamo = await prisma.prestamo.update({
-      where: { id: parseInt(params.id) },
+      where: { id: parseInt(id) },
       data: {
         estado: data.estado,
         observaciones: data.observaciones,
@@ -66,6 +68,7 @@ export async function PUT(request, { params }) {
 }
 
 export async function DELETE(request, { params }) {
+  const { id } = await params
   try {
     const user = await verifyAuth(request)
     if (!user || user.rol !== 'Administrador') {
@@ -73,7 +76,7 @@ export async function DELETE(request, { params }) {
     }
 
     await prisma.prestamo.delete({
-      where: { id: parseInt(params.id) },
+      where: { id: parseInt(id) },
     })
 
     return NextResponse.json({ success: true })

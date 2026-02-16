@@ -52,7 +52,7 @@ export default function Informes() {
 
   const fetchUser = async () => {
     try {
-      const res = await fetch('/api/auth/me')
+      const res = await fetch('/api/auth/me', { credentials: 'include' })
       if (res.ok) {
         const data = await res.json()
         setUser(data.user)
@@ -68,7 +68,7 @@ export default function Informes() {
 
   const fetchNotificaciones = async () => {
     try {
-      const res = await fetch('/api/notificaciones')
+      const res = await fetch('/api/notificaciones', { credentials: 'include' })
       if (res.ok) {
         const data = await res.json()
         setNotificaciones(data.notificaciones || [])
@@ -81,7 +81,7 @@ export default function Informes() {
 
   const marcarLeida = async (id) => {
     try {
-      await fetch('/api/notificaciones', {
+      await fetch('/api/notificaciones', { credentials: 'include', 
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ id })
@@ -94,7 +94,7 @@ export default function Informes() {
 
   const marcarTodasLeidas = async () => {
     try {
-      await fetch('/api/notificaciones', {
+      await fetch('/api/notificaciones', { credentials: 'include', 
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ todas: true })

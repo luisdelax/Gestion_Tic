@@ -34,6 +34,7 @@ export async function GET(request) {
       include: {
         creadoPor: { select: { id: true, nombre: true, apellido: true } },
         asignadoA: { select: { id: true, nombre: true, apellido: true } },
+        ubicacion: true,
         equipoComputo: true,
         evidencias: true,
       },
@@ -63,6 +64,7 @@ export async function POST(request) {
         estado: data.estado || 'Abierto',
         prioridad: data.prioridad || 'Media',
         creadoPorId: user.id,
+        ubicacionId: data.ubicacionId || null,
         asignadoAId: data.asignadoAId || null,
         equipoId: data.equipoId || null,
         observaciones: data.observaciones,

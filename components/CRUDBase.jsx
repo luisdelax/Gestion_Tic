@@ -24,6 +24,7 @@ import {
   Eye,
   Filter,
   Monitor,
+  MapPin,
   UserCog
 } from 'lucide-react'
 
@@ -94,6 +95,7 @@ export default function CRUDBase({ children, title, subtitle }) {
     { icon: Settings, label: 'Periféricos', href: '/perifericos' },
     { icon: Speaker, label: 'Audiovisuales', href: '/audiovisuales' },
     { icon: Ticket, label: 'Tickets', href: '/tickets' },
+    { icon: MapPin, label: 'Ubicaciones', href: '/ubicaciones' },
     { icon: Warehouse, label: 'Préstamos', href: '/prestamos' },
     { icon: Calendar, label: 'Auditorio', href: '/auditorio' },
     { icon: FileText, label: 'Informes', href: '/informes' },

@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { 
   LayoutDashboard, 
+  MapPin,
   Users, 
   Computer, 
   Wifi, 
@@ -22,8 +23,7 @@ import {
   UserCog,
   CheckCircle,
   XCircle,
-  AlertCircle,
-  RefreshCw
+  AlertCircle
 } from 'lucide-react'
 import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend } from 'recharts'
 
@@ -39,20 +39,13 @@ export default function Dashboard() {
 
   useEffect(() => {
     fetchUser()
+    fetchNotificaciones()
+    fetchDashboardData()
   }, [])
-
-  useEffect(() => {
-    if (user) {
-      fetchNotificaciones()
-      fetchDashboardData()
-      const interval = setInterval(fetchNotificaciones, 30000)
-      return () => clearInterval(interval)
-    }
-  }, [user])
 
   const fetchUser = async () => {
     try {
-      const res = await fetch('/api/auth/me')
+      const res = await fetch('/api/auth/me', { credentials: 'include' })
       if (res.ok) {
         const data = await res.json()
         setUser(data.user)
@@ -68,7 +61,7 @@ export default function Dashboard() {
 
   const fetchDashboardData = async () => {
     try {
-      const res = await fetch('/api/dashboard')
+      const res = await fetch('/api/dashboard', { credentials: 'include' })
       if (res.ok) {
         const data = await res.json()
         setDashboardData(data)
@@ -80,11 +73,11 @@ export default function Dashboard() {
 
   const fetchNotificaciones = async () => {
     try {
-      const res = await fetch('/api/notificaciones')
+      const res = await fetch('/api/notificaciones', { credentials: 'include' })
       if (res.ok) {
         const data = await res.json()
-        setNotificaciones(data.notificaciones || [])
-        setNotifSinLeer(data.sinLeer || 0)
+        setNotificaciones(data.notificaciones)
+        setNotifSinLeer(data.sinLeer)
       }
     } catch (error) {
       console.error('Error:', error)
@@ -93,7 +86,7 @@ export default function Dashboard() {
 
   const marcarLeida = async (id) => {
     try {
-      await fetch('/api/notificaciones', {
+      await fetch('/api/notificaciones', { credentials: 'include', 
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ id })
@@ -106,7 +99,7 @@ export default function Dashboard() {
 
   const marcarTodasLeidas = async () => {
     try {
-      await fetch('/api/notificaciones', {
+      await fetch('/api/notificaciones', { credentials: 'include', 
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ todas: true })
@@ -136,6 +129,7 @@ export default function Dashboard() {
     { icon: HardDrive, label: 'Periféricos', href: '/perifericos', roles: ['Administrador', 'Superusuario', 'TecnicoN1'] },
     { icon: Monitor, label: 'Audiovisuales', href: '/audiovisuales', roles: ['Administrador', 'Superusuario', 'TecnicoN1'] },
     { icon: Ticket, label: 'Tickets', href: '/tickets', roles: ['Administrador', 'Superusuario', 'TecnicoN1'] },
+    { icon: MapPin, label: 'Ubicaciones', href: '/ubicaciones', roles: ['Administrador', 'Superusuario'] },
     { icon: Warehouse, label: 'Préstamos', href: '/prestamos', roles: ['Administrador', 'Superusuario'] },
     { icon: Calendar, label: 'Auditorio', href: '/auditorio', roles: ['Administrador', 'Superusuario'] },
     { icon: UserCog, label: 'Usuarios', href: '/usuarios', roles: ['Administrador'] },
@@ -235,23 +229,14 @@ export default function Dashboard() {
                 <div className="absolute right-0 top-full mt-2 w-80 bg-slate-900 border border-green-500/30 rounded-xl shadow-xl z-50 overflow-hidden">
                   <div className="p-3 border-b border-green-500/20 flex items-center justify-between">
                     <h3 className="text-white font-medium">Notificaciones</h3>
-                    <div className="flex items-center gap-2">
+                    {notifSinLeer > 0 && (
                       <button 
-                        onClick={fetchNotificaciones}
-                        className="p-1 hover:bg-slate-700 rounded-lg transition-colors"
-                        title="Actualizar"
+                        onClick={marcarTodasLeidas}
+                        className="text-xs text-green-400 hover:text-green-300"
                       >
-                        <RefreshCw size={14} className="text-green-400" />
+                        Marcar todo leído
                       </button>
-                      {notifSinLeer > 0 && (
-                        <button 
-                          onClick={marcarTodasLeidas}
-                          className="text-xs text-green-400 hover:text-green-300"
-                        >
-                          Marcar todo leído
-                        </button>
-                      )}
-                    </div>
+                    )}
                   </div>
                   <div className="max-h-80 overflow-y-auto">
                     {notificaciones.length > 0 ? (

@@ -15,6 +15,7 @@ async function verifyAuth(request) {
 }
 
 export async function GET(request, { params }) {
+  const { id } = await params
   try {
     const user = await verifyAuth(request)
     if (!user) {
@@ -22,10 +23,11 @@ export async function GET(request, { params }) {
     }
 
     const ticket = await prisma.ticket.findUnique({
-      where: { id: parseInt(params.id) },
+      where: { id: parseInt(id) },
       include: {
         creadoPor: { select: { id: true, nombre: true, apellido: true, email: true } },
         asignadoA: { select: { id: true, nombre: true, apellido: true, email: true } },
+        ubicacion: true,
         equipoComputo: true,
         evidencias: true,
       },
@@ -42,6 +44,7 @@ export async function GET(request, { params }) {
 }
 
 export async function PUT(request, { params }) {
+  const { id } = await params
   try {
     const user = await verifyAuth(request)
     if (!user) {
@@ -51,7 +54,7 @@ export async function PUT(request, { params }) {
     const data = await request.json()
 
     const oldTicket = await prisma.ticket.findUnique({
-      where: { id: parseInt(params.id) }
+      where: { id: parseInt(id) }
     })
 
     const updateData = {
@@ -63,7 +66,12 @@ export async function PUT(request, { params }) {
     }
 
     if (data.asignadoAId !== undefined) {
+      if (data.ubicacionId !== undefined) {
+      updateData.ubicacionId = data.ubicacionId || null
+    }
+    if (data.asignadoAId !== undefined) {
       updateData.asignadoAId = data.asignadoAId || null
+    }
     }
 
     if (data.estado === 'Cerrado' || data.estado === 'Resuelto') {
@@ -71,7 +79,7 @@ export async function PUT(request, { params }) {
     }
 
     const ticket = await prisma.ticket.update({
-      where: { id: parseInt(params.id) },
+      where: { id: parseInt(id) },
       data: updateData,
     })
 
@@ -108,14 +116,15 @@ export async function PUT(request, { params }) {
 }
 
 export async function DELETE(request, { params }) {
+  const { id } = await params
   try {
     const user = await verifyAuth(request)
     if (!user || user.rol !== 'Administrador') {
       return NextResponse.json({ error: 'Solo administradores pueden eliminar' }, { status: 403 })
     }
 
-    await prisma.ticket.delete({
-      where: { id: parseInt(params.id) },
+    const existing = await prisma.ticket.findUnique({where: { id: parseInt(id) }}); if (!existing) return NextResponse.json({ error: "Ticket no encontrado" }, { status: 404 }); await prisma.ticket.delete({
+      where: { id: parseInt(id) },
     })
 
     return NextResponse.json({ success: true })

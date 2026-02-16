@@ -21,6 +21,9 @@ export default function UsuariosPage() {
   const email = useUpperCase('', true)
   const emailInstitucional = useUpperCase('', true)
   const password = useUpperCase('')
+  const [passwordValue, setPasswordValue] = useState('')
+  const handlePasswordChange = (e) => setPasswordValue(e.target.value)
+  const [showPassword, setShowPassword] = useState(false)
 
   const [formData, setFormData] = useState({
     rol: 'TecnicoN1',
@@ -33,7 +36,7 @@ export default function UsuariosPage() {
 
   const fetchUsuarios = async () => {
     try {
-      const res = await fetch('/api/usuarios')
+      const res = await fetch('/api/usuarios', { credentials: 'include' })
       if (res.ok) {
         const data = await res.json()
         setUsuarios(data)
@@ -60,8 +63,8 @@ export default function UsuariosPage() {
         activo: formData.activo,
       }
 
-      if (!editData || password.value) {
-        bodyData.password = password.value
+      if (!editData || passwordValue) {
+        bodyData.password = passwordValue
       }
 
       const res = await fetch(url, {
@@ -84,13 +87,15 @@ export default function UsuariosPage() {
     }
   }
 
+  const togglePassword = () => setShowPassword(!showPassword)
+
   const handleEdit = (usuario) => {
     setEditData(usuario)
     nombre.setValue(usuario.nombre)
     apellido.setValue(usuario.apellido)
     email.setValue(usuario.email)
     emailInstitucional.setValue(usuario.emailInstitucional || '')
-    password.setValue('')
+    setPasswordValue('')
     setFormData({
       rol: usuario.rol,
       activo: usuario.activo,
@@ -119,7 +124,7 @@ export default function UsuariosPage() {
     apellido.setValue('')
     email.setValue('')
     emailInstitucional.setValue('')
-    password.setValue('')
+    setPasswordValue('')
     setFormData({
       rol: 'TecnicoN1',
       activo: true,
@@ -195,11 +200,29 @@ export default function UsuariosPage() {
           </div>
 
           {!editData && (
-            <Input label="Contraseña" type="password" {...password} required placeholder="••••••••" />
+            <div className="relative">
+              <Input label="Contraseña" type={showPassword ? 'text' : 'password'} value={passwordValue} onChange={handlePasswordChange} required placeholder="••••••••" />
+              <button type="button" onClick={togglePassword} className="absolute right-3 top-9 text-slate-400 hover:text-green-400">
+                {showPassword ? (
+                  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>
+                ) : (
+                  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                )}
+              </button>
+            </div>
           )}
 
           {editData && (
-            <Input label="Nueva Contraseña (opcional)" type="password" {...password} placeholder="••••••••" />
+            <div className="relative">
+              <Input label="Nueva Contraseña (opcional)" type={showPassword ? 'text' : 'password'} value={passwordValue} onChange={handlePasswordChange} placeholder="••••••••" />
+              <button type="button" onClick={togglePassword} className="absolute right-3 top-9 text-slate-400 hover:text-green-400">
+                {showPassword ? (
+                  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>
+                ) : (
+                  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                )}
+              </button>
+            </div>
           )}
 
           <div>

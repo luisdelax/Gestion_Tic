@@ -57,7 +57,7 @@ export default function EquiposTelecomPage() {
 
   const fetchEquipos = async () => {
     try {
-      const res = await fetch('/api/equipos/telecom')
+      const res = await fetch('/api/equipos/telecom', { credentials: 'include' })
       if (res.ok) {
         const data = await res.json()
         setEquipos(data)

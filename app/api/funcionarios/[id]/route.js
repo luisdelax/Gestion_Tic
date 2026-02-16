@@ -15,6 +15,7 @@ async function verifyAuth(request) {
 }
 
 export async function GET(request, { params }) {
+  const { id } = await params
   try {
     const user = await verifyAuth(request)
     if (!user) {
@@ -22,7 +23,7 @@ export async function GET(request, { params }) {
     }
 
     const funcionario = await prisma.funcionario.findUnique({
-      where: { id: parseInt(params.id) },
+      where: { id: parseInt(id) },
       include: { equiposAsignados: true },
     })
 
@@ -31,12 +32,13 @@ export async function GET(request, { params }) {
     }
 
     return NextResponse.json(funcionario)
-  } catch (error) {
+  } catch (error) { console.error('Error:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }
 
 export async function PUT(request, { params }) {
+  const { id } = await params
   try {
     const user = await verifyAuth(request)
     if (!user) {
@@ -46,7 +48,7 @@ export async function PUT(request, { params }) {
     const data = await request.json()
 
     const funcionario = await prisma.funcionario.update({
-      where: { id: parseInt(params.id) },
+      where: { id: parseInt(id) },
       data: {
         nombre: data.nombre,
         apellido: data.apellido,
@@ -60,12 +62,13 @@ export async function PUT(request, { params }) {
     })
 
     return NextResponse.json(funcionario)
-  } catch (error) {
+  } catch (error) { console.error('Error:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }
 
 export async function DELETE(request, { params }) {
+  const { id } = await params
   try {
     const user = await verifyAuth(request)
     if (!user || user.rol !== 'Administrador') {
@@ -73,11 +76,11 @@ export async function DELETE(request, { params }) {
     }
 
     await prisma.funcionario.delete({
-      where: { id: parseInt(params.id) },
+      where: { id: parseInt(id) },
     })
 
     return NextResponse.json({ success: true })
-  } catch (error) {
+  } catch (error) { console.error('Error:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }

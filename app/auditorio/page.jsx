@@ -43,8 +43,8 @@ export default function AuditorioPage() {
   const fetchData = async () => {
     try {
       const [reservasRes, funcionariosRes] = await Promise.all([
-        fetch('/api/auditorio'),
-        fetch('/api/funcionarios')
+        fetch('/api/auditorio', { credentials: 'include' }),
+        fetch('/api/funcionarios', { credentials: 'include' })
       ])
       
       if (reservasRes.ok) setReservas(await reservasRes.json())
@@ -60,7 +60,7 @@ export default function AuditorioPage() {
     try {
       const res = await fetch(`/api/auditorio?fecha=${selectedDate}`)
       if (res.ok) {
-        const allReservas = await fetch('/api/auditorio')
+        const allReservas = await fetch('/api/auditorio', { credentials: 'include' })
         setReservas(allReservas.ok ? await allReservas.json() : [])
       }
     } catch (error) {

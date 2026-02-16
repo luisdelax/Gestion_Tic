@@ -16,6 +16,7 @@ async function verifyAuth(request) {
 }
 
 export async function GET(request, { params }) {
+  const { id } = await params
   try {
     const user = await verifyAuth(request)
     if (!user) {
@@ -23,7 +24,7 @@ export async function GET(request, { params }) {
     }
 
     const usuario = await prisma.user.findUnique({
-      where: { id: parseInt(params.id) },
+      where: { id: parseInt(id) },
       select: {
         id: true,
         nombre: true,
@@ -47,6 +48,7 @@ export async function GET(request, { params }) {
 }
 
 export async function PUT(request, { params }) {
+  const { id } = await params
   try {
     const user = await verifyAuth(request)
     if (!user) {
@@ -72,7 +74,7 @@ export async function PUT(request, { params }) {
     }
 
     const usuario = await prisma.user.update({
-      where: { id: parseInt(params.id) },
+      where: { id: parseInt(id) },
       data: updateData,
     })
 
@@ -89,18 +91,19 @@ export async function PUT(request, { params }) {
 }
 
 export async function DELETE(request, { params }) {
+  const { id } = await params
   try {
     const user = await verifyAuth(request)
     if (!user || user.rol !== 'Administrador') {
       return NextResponse.json({ error: 'Solo administradores pueden eliminar usuarios' }, { status: 403 })
     }
 
-    if (parseInt(params.id) === user.id) {
+    if (parseInt(id) === user.id) {
       return NextResponse.json({ error: 'No puedes eliminar tu propio usuario' }, { status: 400 })
     }
 
     await prisma.user.delete({
-      where: { id: parseInt(params.id) },
+      where: { id: parseInt(id) },
     })
 
     return NextResponse.json({ success: true })

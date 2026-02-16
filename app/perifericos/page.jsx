@@ -44,7 +44,7 @@ export default function PerifericosPage() {
 
   const fetchPerifericos = async () => {
     try {
-      const res = await fetch('/api/perifericos')
+      const res = await fetch('/api/perifericos', { credentials: 'include' })
       if (res.ok) {
         const data = await res.json()
         setPerifericos(data)

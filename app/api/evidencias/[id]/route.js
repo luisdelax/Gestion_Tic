@@ -17,6 +17,7 @@ async function verifyAuth(request) {
 }
 
 export async function GET(request, { params }) {
+  const { id } = await params
   try {
     const user = await verifyAuth(request)
     if (!user) {
@@ -24,7 +25,7 @@ export async function GET(request, { params }) {
     }
 
     const evidencia = await prisma.evidencia.findUnique({
-      where: { id: parseInt(params.id) },
+      where: { id: parseInt(id) },
     })
 
     if (!evidencia) {
@@ -38,6 +39,7 @@ export async function GET(request, { params }) {
 }
 
 export async function DELETE(request, { params }) {
+  const { id } = await params
   try {
     const user = await verifyAuth(request)
     if (!user) {
@@ -45,7 +47,7 @@ export async function DELETE(request, { params }) {
     }
 
     const evidencia = await prisma.evidencia.findUnique({
-      where: { id: parseInt(params.id) },
+      where: { id: parseInt(id) },
     })
 
     if (evidencia) {
@@ -57,7 +59,7 @@ export async function DELETE(request, { params }) {
       }
 
       await prisma.evidencia.delete({
-        where: { id: parseInt(params.id) },
+        where: { id: parseInt(id) },
       })
     }
 

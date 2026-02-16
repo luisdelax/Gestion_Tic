@@ -22,6 +22,7 @@ export default function TicketsPage() {
   const [tickets, setTickets] = useState([])
   const [tecnicos, setTecnicos] = useState([])
   const [equipos, setEquipos] = useState([])
+  const [ubicaciones, setUbicaciones] = useState([])
   const [loading, setLoading] = useState(true)
   const [modalOpen, setModalOpen] = useState(false)
   const [viewModalOpen, setViewModalOpen] = useState(false)
@@ -44,6 +45,7 @@ export default function TicketsPage() {
     descripcion: '',
     estado: 'Abierto',
     prioridad: 'Media',
+    ubicacionId: '',
     asignadoAId: '',
     equipoId: '',
     observaciones: '',
@@ -55,15 +57,17 @@ export default function TicketsPage() {
 
   const fetchData = async () => {
     try {
-      const [ticketsRes, tecnicosRes, equiposRes] = await Promise.all([
-        fetch('/api/tickets'),
-        fetch('/api/auth/tecnicos'),
-        fetch('/api/equipos/computo'),
+      const [ticketsRes, tecnicosRes, equiposRes, ubicacionesRes] = await Promise.all([
+        fetch('/api/tickets', { credentials: 'include' }),
+        fetch('/api/auth/tecnicos', { credentials: 'include' }),
+        fetch('/api/equipos/computo', { credentials: 'include' }),
+        fetch('/api/ubicaciones', { credentials: 'include' }),
       ])
       
       if (ticketsRes.ok) setTickets(await ticketsRes.json())
       if (tecnicosRes.ok) setTecnicos(await tecnicosRes.json())
       if (equiposRes.ok) setEquipos(await equiposRes.json())
+      if (ubicacionesRes.ok) setUbicaciones(await ubicacionesRes.json())
     } catch (error) {
       console.error('Error:', error)
     } finally {
@@ -99,7 +103,7 @@ export default function TicketsPage() {
             const formDataFile = new FormData()
             formDataFile.append('file', file)
             formDataFile.append('ticketId', ticket.id)
-            await fetch('/api/evidencias', {
+            await fetch('/api/evidencias', { credentials: 'include', 
               method: 'POST',
               body: formDataFile,
             })
@@ -142,6 +146,7 @@ export default function TicketsPage() {
       descripcion: ticket.descripcion,
       estado: ticket.estado,
       prioridad: ticket.prioridad,
+      ubicacionId: ticket.ubicacionId || '',
       asignadoAId: ticket.asignadoAId || '',
       equipoId: ticket.equipoId || '',
       observaciones: ticket.observaciones || '',
@@ -182,7 +187,7 @@ export default function TicketsPage() {
         const formDataFile = new FormData()
         formDataFile.append('file', file)
         formDataFile.append('ticketId', ticketId)
-        await fetch('/api/evidencias', {
+        await fetch('/api/evidencias', { credentials: 'include', 
           method: 'POST',
           body: formDataFile,
         })
@@ -232,6 +237,7 @@ export default function TicketsPage() {
       Cerrado: { color: 'bg-green-500/20 text-green-400 border-green-500/30', icon: XCircle, bg: 'bg-green-500' },
     }
     const labels = { Abierto: 'Abierto', EnProceso: 'En Proceso', Resuelto: 'Resuelto', Cerrado: 'Cerrado' }
+    if (!config[estado]) return <span className="text-slate-400">-</span>
     const { icon: Icon, bg } = config[estado]
     return (
       <div className="flex items-center gap-2">
@@ -260,6 +266,8 @@ export default function TicketsPage() {
     { key: 'prioridad', header: 'Prioridad', render: (val) => getPrioridadBadge(val) },
     { key: 'creadoPor', header: 'Creado por', render: (val) => val ? `${val.nombre} ${val.apellido}` : '-' },
     { key: 'asignadoA', header: 'Técnico', render: (val) => val ? `${val.nombre} ${val.apellido}` : '-' },
+    { key: 'createdAt', header: 'Fecha Creación', render: (val) => val ? new Date(val).toLocaleDateString('es-CO', { day: '2-digit', month: '2-digit', year: 'numeric' }) : '-' },
+    { key: 'fechaCierre', header: 'Fecha Cierre', render: (val) => val ? new Date(val).toLocaleDateString('es-CO', { day: '2-digit', month: '2-digit', year: 'numeric' }) : '-' },
     { 
       key: 'evidencias', 
       header: 'Evidencias', 

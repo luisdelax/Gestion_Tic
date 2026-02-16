@@ -88,18 +88,25 @@ export async function PUT(request, { params }) {
 }
 
 export async function DELETE(request, { params }) {
+  const { id } = await params
   try {
     const user = await verifyAuth(request)
     if (!user || user.rol !== 'Administrador') {
       return NextResponse.json({ error: 'Solo administradores pueden eliminar' }, { status: 403 })
     }
 
+    const existing = await prisma.equipoComputo.findUnique({ where: { id: parseInt(id) } })
+    if (!existing) {
+      return NextResponse.json({ error: 'Equipo no encontrado' }, { status: 404 })
+    }
+
     await prisma.equipoComputo.delete({
-      where: { id: parseInt(params.id) },
+      where: { id: parseInt(id) },
     })
 
     return NextResponse.json({ success: true })
   } catch (error) {
+    console.error('DELETE error:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }

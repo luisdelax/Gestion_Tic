@@ -22,15 +22,15 @@ export async function GET(request, { params }) {
       return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
     }
 
-    const periferico = await prisma.periferico.findUnique({
+    const ubicacion = await prisma.ubicacion.findUnique({
       where: { id: parseInt(id) },
     })
 
-    if (!periferico) {
+    if (!ubicacion) {
       return NextResponse.json({ error: 'No encontrado' }, { status: 404 })
     }
 
-    return NextResponse.json(periferico)
+    return NextResponse.json(ubicacion)
   } catch (error) {
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
@@ -44,25 +44,25 @@ export async function PUT(request, { params }) {
       return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
     }
 
+    if (user.rol !== 'Administrador') {
+      return NextResponse.json({ error: 'Solo administradores pueden modificar ubicaciones' }, { status: 403 })
+    }
+
     const data = await request.json()
 
-    const periferico = await prisma.periferico.update({
+    const ubicacion = await prisma.ubicacion.update({
       where: { id: parseInt(id) },
       data: {
+        nombre: data.nombre,
         tipo: data.tipo,
-        marca: data.marca,
-        modelo: data.modelo,
-        serial: data.serial || null,
-        color: data.color || null,
-        estado: data.estado,
-        ubicacion: data.ubicacion,
-        dependencia: data.dependencia,
-        observaciones: data.observaciones,
+        descripcion: data.descripcion || null,
+        activo: data.activo,
       },
     })
 
-    return NextResponse.json(periferico)
+    return NextResponse.json(ubicacion)
   } catch (error) {
+    console.error('Error:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }
@@ -72,10 +72,10 @@ export async function DELETE(request, { params }) {
   try {
     const user = await verifyAuth(request)
     if (!user || user.rol !== 'Administrador') {
-      return NextResponse.json({ error: 'Solo administradores pueden eliminar' }, { status: 403 })
+      return NextResponse.json({ error: 'Solo administradores pueden eliminar ubicaciones' }, { status: 403 })
     }
 
-    await prisma.periferico.delete({
+    await prisma.ubicacion.delete({
       where: { id: parseInt(id) },
     })
 

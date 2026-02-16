@@ -46,7 +46,7 @@ export default function FuncionariosPage() {
 
   const fetchFuncionarios = async () => {
     try {
-      const res = await fetch('/api/funcionarios')
+      const res = await fetch('/api/funcionarios', { credentials: 'include' })
       if (res.ok) {
         const data = await res.json()
         setFuncionarios(data)

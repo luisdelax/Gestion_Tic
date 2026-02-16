@@ -15,6 +15,7 @@ async function verifyAuth(request) {
 }
 
 export async function GET(request, { params }) {
+  const { id } = await params
   try {
     const user = await verifyAuth(request)
     if (!user) {
@@ -22,7 +23,7 @@ export async function GET(request, { params }) {
     }
 
     const equipo = await prisma.equipoAudiovisual.findUnique({
-      where: { id: parseInt(params.id) },
+      where: { id: parseInt(id) },
     })
 
     if (!equipo) {
@@ -36,6 +37,7 @@ export async function GET(request, { params }) {
 }
 
 export async function PUT(request, { params }) {
+  const { id } = await params
   try {
     const user = await verifyAuth(request)
     if (!user) {
@@ -48,7 +50,7 @@ export async function PUT(request, { params }) {
       const existingPlaca = await prisma.equipoAudiovisual.findFirst({
         where: { 
           placa: data.placa,
-          NOT: { id: parseInt(params.id) }
+          NOT: { id: parseInt(id) }
         },
       })
       if (existingPlaca) {
@@ -60,7 +62,7 @@ export async function PUT(request, { params }) {
     }
 
     const equipo = await prisma.equipoAudiovisual.update({
-      where: { id: parseInt(params.id) },
+      where: { id: parseInt(id) },
       data: {
         tipo: data.tipo,
         marca: data.marca,
@@ -81,6 +83,7 @@ export async function PUT(request, { params }) {
 }
 
 export async function DELETE(request, { params }) {
+  const { id } = await params
   try {
     const user = await verifyAuth(request)
     if (!user || user.rol !== 'Administrador') {
@@ -88,7 +91,7 @@ export async function DELETE(request, { params }) {
     }
 
     await prisma.equipoAudiovisual.delete({
-      where: { id: parseInt(params.id) },
+      where: { id: parseInt(id) },
     })
 
     return NextResponse.json({ success: true })

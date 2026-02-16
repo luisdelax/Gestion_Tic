@@ -93,11 +93,30 @@ enum TipoEvidencia {
   pdf
 }
 
+enum TipoUbicacion {
+  Centro
+  Ambiente
+  Oficina
+  Biblioteca
+  Aula
+}
+
 enum EstadoPrestamo {
   Pendiente
   Aprobado
   Rechazado
   Devuelto
+}
+
+model Ubicacion {
+  id          Int       @id @default(autoincrement())
+  nombre      String
+  tipo        TipoUbicacion
+  descripcion String?
+  activo      Boolean   @default(true)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  tickets     Ticket[]
 }
 
 model User {
@@ -222,6 +241,8 @@ model Ticket {
   descripcion       String
   estado            EstadoTicket    @default(Abierto)
   prioridad         PrioridadTicket @default(Media)
+  ubicacionId       Int?
+  ubicacion         Ubicacion?     @relation(fields: [ubicacionId], references: [id])
   creadoPorId       Int
   creadoPor         User             @relation("TicketCreador", fields: [creadoPorId], references: [id])
   asignadoAId       Int?
@@ -261,6 +282,12 @@ model Prestamo {
   fechaPrestamo   DateTime
   fechaDevolucion DateTime?
   observaciones   String?
+  bolso           Boolean   @default(false)
+  cargador        Boolean   @default(false)
+  memoriaSd       Boolean   @default(false)
+  guaya           Boolean   @default(false)
+  padMouse        Boolean   @default(false)
+  mouse           Boolean   @default(false)
   activo          Boolean         @default(true)
   createdAt       DateTime        @default(now())
   updatedAt       DateTime        @updatedAt
@@ -275,6 +302,12 @@ model ReservaAuditorio {
   fechaFin        DateTime
   estado          String    @default("Pendiente")
   observaciones   String?
+  bolso           Boolean   @default(false)
+  cargador        Boolean   @default(false)
+  memoriaSd       Boolean   @default(false)
+  guaya           Boolean   @default(false)
+  padMouse        Boolean   @default(false)
+  mouse           Boolean   @default(false)
   activo          Boolean   @default(true)
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
