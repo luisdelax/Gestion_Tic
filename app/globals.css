@@ -1,0 +1,38 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --neon-green: #00FF9F;
+  --neon-green-dark: #00CC7F;
+}
+
+body {
+  background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+  min-height: 100vh;
+}
+
+.glass {
+  background: rgba(15, 25, 35, 0.6);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(0, 255, 159, 0.2);
+}
+
+.neon-border {
+  border: 1px solid rgba(0, 255, 159, 0.3);
+  box-shadow: 0 0 15px rgba(0, 255, 159, 0.2);
+}
+
+.neon-text {
+  color: var(--neon-green);
+  text-shadow: 0 0 10px rgba(0, 255, 159, 0.5);
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+
+.animate-float {
+  animation: float 3s ease-in-out infinite;
+}

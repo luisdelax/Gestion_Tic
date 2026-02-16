@@ -1,0 +1,300 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Rol {
+  Administrador
+  Superusuario
+  TecnicoN1
+}
+
+enum TipoFuncionario {
+  Docente
+  Administrativo
+  Aprendiz
+  Contratista
+}
+
+enum TipoEquipo {
+  Desktop
+  Laptop
+  Servidor
+  Monitor
+  Impresora
+  Scanner
+  Tablet
+  AllInOne
+}
+
+enum EstadoEquipo {
+  Disponible
+  Asignado
+  EnReparacion
+  DadoDeBaja
+}
+
+enum TipoEquipoTelecom {
+  Switch
+  Router
+  AccessPoint
+  Modem
+  TelefonoIP
+  CableRed
+  PatchPanel
+  FibraOptica
+}
+
+enum TipoPeriferico {
+  Mouse
+  Teclado
+  AdaptadorUSB
+  MemoriaSD
+  Audifonos
+  Webcam
+  DiscoExterno
+}
+
+enum TipoAudiovisual {
+  VideoBeam
+  Proyector
+  Microfono
+  Parlantes
+  Pantalla
+  Camara
+}
+
+enum UnidadAlmacenamiento {
+  GB
+  TB
+  MB
+}
+
+enum EstadoTicket {
+  Abierto
+  EnProceso
+  Resuelto
+  Cerrado
+}
+
+enum PrioridadTicket {
+  Baja
+  Media
+  Alta
+  Critica
+}
+
+enum TipoEvidencia {
+  imagen
+  pdf
+}
+
+enum EstadoPrestamo {
+  Pendiente
+  Aprobado
+  Rechazado
+  Devuelto
+}
+
+model User {
+  id                Int       @id @default(autoincrement())
+  nombre            String
+  apellido          String
+  email             String    @unique
+  password          String
+  rol               Rol       @default(TecnicoN1)
+  emailInstitucional String?  @unique
+  activo            Boolean   @default(true)
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+  ticketsCreados   Ticket[]  @relation("TicketCreador")
+  ticketsAsignados Ticket[]  @relation("TicketTecnico")
+  prestamos         Prestamo[] @relation("PrestamoUsuario")
+  notificaciones    Notificacion[]
+}
+
+model Funcionario {
+  id                   Int             @id @default(autoincrement())
+  nombre               String
+  apellido             String
+  tipo                 TipoFuncionario
+  cedula               String          @unique
+  telefono             String?
+  emailPersonal        String?
+  emailInstitucional   String          @unique
+  dependencia          String?
+  cargo                String?
+  activo               Boolean         @default(true)
+  createdAt            DateTime        @default(now())
+  updatedAt            DateTime        @updatedAt
+  equiposAsignados     EquipoComputo[] @relation("Responsable")
+}
+
+model EquipoComputo {
+  id                  Int           @id @default(autoincrement())
+  tipo                TipoEquipo
+  marca               String
+  modelo              String
+  serial              String        @unique
+  mac                 String?
+  placa               String?       @unique
+  procesador          String?
+  ram                String?
+  unidadRam           UnidadAlmacenamiento?
+  discoDuro          String?
+  unidadDisco         UnidadAlmacenamiento?
+  estado              EstadoEquipo  @default(Disponible)
+  ubicacion           String?
+  dependencia         String?
+  fechaAdquisicion    DateTime?
+  fechaGarantia       DateTime?
+  observaciones       String?
+  activo              Boolean       @default(true)
+  createdAt           DateTime      @default(now())
+  updatedAt           DateTime      @updatedAt
+  responsableId       Int?
+  responsable         Funcionario?  @relation("Responsable", fields: [responsableId], references: [id])
+  tickets             Ticket[]
+  prestamos           Prestamo[]
+}
+
+model EquipoTelecom {
+  id                  Int              @id @default(autoincrement())
+  tipo                TipoEquipoTelecom
+  marca               String
+  modelo              String
+  serial              String           @unique
+  mac                 String?
+  ip                  String?
+  estado              EstadoEquipo     @default(Disponible)
+  ubicacion           String?
+  dependencia         String?
+  fechaAdquisicion    DateTime?
+  observaciones      String?
+  activo              Boolean          @default(true)
+  createdAt           DateTime         @default(now())
+  updatedAt           DateTime         @updatedAt
+}
+
+model Periferico {
+  id                  Int              @id @default(autoincrement())
+  tipo                TipoPeriferico
+  marca               String
+  modelo              String
+  serial              String?
+  color               String?
+  estado              EstadoEquipo     @default(Disponible)
+  ubicacion           String?
+  dependencia         String?
+  fechaAdquisicion    DateTime?
+  observaciones      String?
+  activo              Boolean          @default(true)
+  createdAt           DateTime         @default(now())
+  updatedAt           DateTime         @updatedAt
+  prestamos           Prestamo[]
+}
+
+model EquipoAudiovisual {
+  id                  Int              @id @default(autoincrement())
+  tipo                TipoAudiovisual
+  marca               String
+  modelo              String
+  serial              String           @unique
+  placa               String?
+  estado              EstadoEquipo     @default(Disponible)
+  ubicacion           String?
+  dependencia         String?
+  fechaAdquisicion    DateTime?
+  observaciones      String?
+  activo              Boolean          @default(true)
+  createdAt           DateTime         @default(now())
+  updatedAt           DateTime         @updatedAt
+  prestamos           Prestamo[]
+}
+
+model Ticket {
+  id                Int             @id @default(autoincrement())
+  titulo            String
+  descripcion       String
+  estado            EstadoTicket    @default(Abierto)
+  prioridad         PrioridadTicket @default(Media)
+  creadoPorId       Int
+  creadoPor         User             @relation("TicketCreador", fields: [creadoPorId], references: [id])
+  asignadoAId       Int?
+  asignadoA         User?           @relation("TicketTecnico", fields: [asignadoAId], references: [id])
+  equipoId          Int?
+  equipoComputo     EquipoComputo?  @relation(fields: [equipoId], references: [id])
+  fechaCierre       DateTime?
+  observaciones     String?
+  activo            Boolean         @default(true)
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
+  evidencias        Evidencia[]
+}
+
+model Evidencia {
+  id            Int         @id @default(autoincrement())
+  ticketId      Int
+  ticket        Ticket      @relation(fields: [ticketId], references: [id])
+  tipoArchivo   TipoEvidencia
+  urlArchivo    String
+  nombreArchivo String
+  observaciones String?
+  createdAt     DateTime    @default(now())
+}
+
+model Prestamo {
+  id                Int             @id @default(autoincrement())
+  usuarioId        Int
+  usuario          User            @relation("PrestamoUsuario", fields: [usuarioId], references: [id])
+  equipoComputoId  Int?
+  equipoComputo    EquipoComputo?  @relation(fields: [equipoComputoId], references: [id])
+  perifericoId    Int?
+  periferico      Periferico?    @relation(fields: [perifericoId], references: [id])
+  audiovisualId   Int?
+  audiovisual     EquipoAudiovisual? @relation(fields: [audiovisualId], references: [id])
+  estado          EstadoPrestamo @default(Pendiente)
+  fechaPrestamo   DateTime
+  fechaDevolucion DateTime?
+  observaciones   String?
+  activo          Boolean         @default(true)
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+}
+
+model ReservaAuditorio {
+  id              Int       @id @default(autoincrement())
+  evento          String
+  solicitante     String
+  dependencia     String
+  fechaInicio     DateTime
+  fechaFin        DateTime
+  estado          String    @default("Pendiente")
+  observaciones   String?
+  activo          Boolean   @default(true)
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+}
+
+enum TipoNotificacion {
+  Ticket
+  Prestamo
+  Reserva
+  Sistema
+}
+
+model Notificacion {
+  id            Int              @id @default(autoincrement())
+  usuarioId     Int
+  usuario       User             @relation(fields: [usuarioId], references: [id])
+  titulo        String
+  mensaje       String
+  tipo          TipoNotificacion
+  leida         Boolean          @default(false)
+  link          String?
+  createdAt     DateTime         @default(now())
+}
