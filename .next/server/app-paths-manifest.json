@@ -1,5 +1,0 @@
-{
-  "/funcionarios/page": "app/funcionarios/page.js",
-  "/api/funcionarios/route": "app/api/funcionarios/route.js",
-  "/api/auth/me/route": "app/api/auth/me/route.js"
-}
