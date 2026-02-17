@@ -89,6 +89,20 @@ enum PrioridadTicket {
   Critica
 }
 
+enum PrioridadTarea {
+  Baja
+  Media
+  Alta
+  Urgente
+}
+
+enum EstadoTarea {
+  Pendiente
+  EnProceso
+  Completada
+  Cancelada
+}
+
 enum TipoEvidencia {
   imagen
   pdf
@@ -134,6 +148,8 @@ model User {
   ticketsCreados   Ticket[]  @relation("TicketCreador")
   ticketsAsignados Ticket[]  @relation("TicketTecnico")
   notificaciones    Notificacion[]
+  tareasCreadas    Tarea[]    @relation("TareaCreador")
+  tareasAsignadas Tarea[]    @relation("TareaAsignado")
 }
 
 model Funcionario {
@@ -320,6 +336,7 @@ enum TipoNotificacion {
   Prestamo
   Reserva
   Sistema
+  Tarea
 }
 
 model Notificacion {
@@ -331,5 +348,23 @@ model Notificacion {
   tipo          TipoNotificacion
   leida         Boolean          @default(false)
   link          String?
+  tareaId       Int?
   createdAt     DateTime         @default(now())
+}
+
+model Tarea {
+  id            Int              @id @default(autoincrement())
+  titulo        String
+  descripcion   String?
+  prioridad     PrioridadTarea   @default(Media)
+  estado        EstadoTarea      @default(Pendiente)
+  creadoPorId   Int
+  creadoPor     User             @relation("TareaCreador", fields: [creadoPorId], references: [id])
+  asignadoAId   Int?
+  asignadoA     User?           @relation("TareaAsignado", fields: [asignadoAId], references: [id])
+  fechaLimite   DateTime?
+  notificacionEnviada Boolean     @default(false)
+  activo        Boolean          @default(true)
+  createdAt     DateTime         @default(now())
+  updatedAt     DateTime         @updatedAt
 }

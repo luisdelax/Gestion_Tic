@@ -26,6 +26,7 @@ import {
   ExternalLink,
   Copy,
   CheckCircle,
+  CheckSquare,
   RefreshCw
 } from 'lucide-react'
 
@@ -118,6 +119,7 @@ export default function Informes() {
     { icon: HardDrive, label: 'Periféricos', href: '/perifericos', roles: ['Administrador', 'Superusuario', 'TecnicoN1'] },
     { icon: Monitor, label: 'Audiovisuales', href: '/audiovisuales', roles: ['Administrador', 'Superusuario', 'TecnicoN1'] },
     { icon: Ticket, label: 'Tickets', href: '/tickets', roles: ['Administrador', 'Superusuario', 'TecnicoN1'] },
+    { icon: CheckSquare, label: 'Tareas', href: '/tareas', roles: ['Administrador', 'Superusuario', 'TecnicoN1'] },
     { icon: Warehouse, label: 'Préstamos', href: '/prestamos', roles: ['Administrador', 'Superusuario'] },
     { icon: Calendar, label: 'Auditorio', href: '/auditorio', roles: ['Administrador', 'Superusuario'] },
     { icon: UserCog, label: 'Usuarios', href: '/usuarios', roles: ['Administrador'] },
