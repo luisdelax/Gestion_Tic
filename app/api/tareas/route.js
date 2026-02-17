@@ -17,7 +17,7 @@ async function verifyAuth(request) {
 async function createNotificacion(usuarioId, titulo, mensaje, tipo, tareaId = null) {
   await prisma.notificacion.create({
     data: {
-      usuarioId,
+      usuarioId: parseInt(usuarioId),
       titulo,
       mensaje,
       tipo,
@@ -93,7 +93,7 @@ export async function POST(request) {
         prioridad: data.prioridad || 'Media',
         estado: 'Pendiente',
         creadoPorId: user.id,
-        asignadoAId: data.asignadoAId || null,
+        asignadoAId: data.asignadoAId ? parseInt(data.asignadoAId) : null,
         fechaLimite: data.fechaLimite ? new Date(data.fechaLimite) : null,
       },
       include: {
@@ -104,7 +104,7 @@ export async function POST(request) {
 
     if (data.asignadoAId) {
       await createNotificacion(
-        data.asignadoAId,
+        parseInt(data.asignadoAId),
         'Nueva tarea asignada',
         `Se te ha asignado la tarea: ${data.titulo}`,
         'Tarea',
