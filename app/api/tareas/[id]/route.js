@@ -76,10 +76,12 @@ export async function PUT(request, { params }) {
     if (data.descripcion !== undefined) updateData.descripcion = data.descripcion
     if (data.prioridad) updateData.prioridad = data.prioridad
     if (data.estado) updateData.estado = data.estado
-    if (data.asignadoAId !== undefined) updateData.asignadoAId = data.asignadoAId || null
+    if (data.asignadoAId !== undefined) {
+      updateData.asignadoAId = data.asignadoAId ? parseInt(data.asignadoAId) : null
+    }
     if (data.fechaLimite) {
       updateData.fechaLimite = new Date(data.fechaLimite)
-    } else if (data.fechaLimite === null) {
+    } else if (data.fechaLimite === null || data.fechaLimite === '') {
       updateData.fechaLimite = null
     }
 
