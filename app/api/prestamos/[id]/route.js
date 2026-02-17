@@ -58,6 +58,12 @@ export async function PUT(request, { params }) {
         estado: data.estado,
         observaciones: data.observaciones,
         fechaDevolucion: data.estado === 'Devuelto' ? new Date() : undefined,
+        bolso: data.bolso || false,
+        cargador: data.cargador || false,
+        memoriaSd: data.memoriaSd || false,
+        guaya: data.guaya || false,
+        padMouse: data.padMouse || false,
+        mouse: data.mouse || false,
       },
     })
 

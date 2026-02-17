@@ -132,7 +132,6 @@ model User {
   updatedAt         DateTime  @updatedAt
   ticketsCreados   Ticket[]  @relation("TicketCreador")
   ticketsAsignados Ticket[]  @relation("TicketTecnico")
-  prestamos         Prestamo[] @relation("PrestamoUsuario")
   notificaciones    Notificacion[]
 }
 
@@ -151,6 +150,7 @@ model Funcionario {
   createdAt            DateTime        @default(now())
   updatedAt            DateTime        @updatedAt
   equiposAsignados     EquipoComputo[] @relation("Responsable")
+  prestamos            Prestamo[]
 }
 
 model EquipoComputo {
@@ -271,7 +271,7 @@ model Evidencia {
 model Prestamo {
   id                Int             @id @default(autoincrement())
   usuarioId        Int
-  usuario          User            @relation("PrestamoUsuario", fields: [usuarioId], references: [id])
+  usuario          Funcionario     @relation(fields: [usuarioId], references: [id])
   equipoComputoId  Int?
   equipoComputo    EquipoComputo?  @relation(fields: [equipoComputoId], references: [id])
   perifericoId    Int?

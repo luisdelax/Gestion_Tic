@@ -54,6 +54,13 @@ export async function POST(request) {
 
     const data = await request.json()
 
+    if (!data.usuarioId) {
+      return NextResponse.json(
+        { error: 'Debe seleccionar un funcionario' },
+        { status: 400 }
+      )
+    }
+
     if (!data.equipoComputoId && !data.perifericoId && !data.audiovisualId) {
       return NextResponse.json(
         { error: 'Debe seleccionar al menos un equipo' },
@@ -63,13 +70,19 @@ export async function POST(request) {
 
     const prestamo = await prisma.prestamo.create({
       data: {
-        usuarioId: user.id,
+        usuarioId: data.usuarioId,
         equipoComputoId: data.equipoComputoId || null,
         perifericoId: data.perifericoId || null,
         audiovisualId: data.audiovisualId || null,
         fechaPrestamo: new Date(data.fechaPrestamo),
         fechaDevolucion: data.fechaDevolucion ? new Date(data.fechaDevolucion) : null,
         observaciones: data.observaciones,
+        bolso: data.bolso || false,
+        cargador: data.cargador || false,
+        memoriaSd: data.memoriaSd || false,
+        guaya: data.guaya || false,
+        padMouse: data.padMouse || false,
+        mouse: data.mouse || false,
       },
     })
 
