@@ -172,6 +172,7 @@ model EquipoComputo {
   fechaAdquisicion    DateTime?
   fechaGarantia       DateTime?
   observaciones       String?
+  hojaVidaUrl         String?
   activo              Boolean       @default(true)
   createdAt           DateTime      @default(now())
   updatedAt           DateTime      @updatedAt

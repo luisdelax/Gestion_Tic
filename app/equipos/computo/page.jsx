@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import CRUDBase, { DataTable, Modal, Button, Input, useUpperCase } from '@/components/CRUDBase'
-import { Plus } from 'lucide-react'
+import { Plus, Upload, FileText, X, Eye } from 'lucide-react'
 import { 
   MARCAS_COMPUTADORAS, 
   MODELOS_POR_MARCA, 
@@ -62,6 +62,11 @@ export default function EquiposComputoPage() {
     observaciones: '',
     responsableId: '',
   })
+
+  const [uploading, setUploading] = useState(false)
+  const [hojaVidaFile, setHojaVidaFile] = useState(null)
+  const [showHojaVidaModal, setShowHojaVidaModal] = useState(false)
+  const [selectedEquipo, setSelectedEquipo] = useState(null)
 
   useEffect(() => {
     fetchData()
@@ -199,6 +204,77 @@ export default function EquiposComputoPage() {
       observaciones: '',
       responsableId: '',
     })
+    setHojaVidaFile(null)
+  }
+
+  const handleFileChange = (e) => {
+    const file = e.target.files[0]
+    if (file) {
+      if (file.type !== 'application/pdf') {
+        alert('Solo se aceptan archivos PDF')
+        return
+      }
+      setHojaVidaFile(file)
+    }
+  }
+
+  const handleUploadHojaVida = async () => {
+    if (!hojaVidaFile || !selectedEquipo) return
+    
+    setUploading(true)
+    try {
+      const formData = new FormData()
+      formData.append('file', hojaVidaFile)
+      formData.append('equipoId', selectedEquipo.id.toString())
+
+      const res = await fetch('/api/equipos/computo/hojadevida', {
+        method: 'POST',
+        credentials: 'include',
+        body: formData,
+      })
+
+      if (res.ok) {
+        const data = await res.json()
+        alert('Archivo subido correctamente')
+        setShowHojaVidaModal(false)
+        setHojaVidaFile(null)
+        fetchData()
+      } else {
+        const data = await res.json()
+        alert(data.error || 'Error al subir archivo')
+      }
+    } catch (error) {
+      console.error('Error:', error)
+      alert('Error al subir archivo')
+    } finally {
+      setUploading(false)
+    }
+  }
+
+  const handleDeleteHojaVida = async (equipo) => {
+    if (!confirm('¿Eliminar la hoja de vida?')) return
+    
+    try {
+      const res = await fetch(`/api/equipos/computo/hojadevida?equipoId=${equipo.id}`, {
+        method: 'DELETE',
+        credentials: 'include',
+      })
+
+      if (res.ok) {
+        alert('Archivo eliminado')
+        fetchData()
+      } else {
+        alert('Error al eliminar archivo')
+      }
+    } catch (error) {
+      console.error('Error:', error)
+    }
+  }
+
+  const openHojaVidaModal = (equipo) => {
+    setSelectedEquipo(equipo)
+    setHojaVidaFile(null)
+    setShowHojaVidaModal(true)
   }
 
   const getEstadoBadge = (estado) => {
@@ -225,6 +301,36 @@ export default function EquiposComputoPage() {
     { key: 'modelo', header: 'Modelo' },
     { key: 'estado', header: 'Estado', render: (val) => getEstadoBadge(val) },
     { key: 'ubicacion', header: 'Ubicación' },
+    { key: 'hojaVida', header: 'Hoja Vida', render: (_, row) => (
+      row.hojaVidaUrl ? (
+        <div className="flex gap-1">
+          <a 
+            href={row.hojaVidaUrl} 
+            target="_blank" 
+            rel="noopener noreferrer"
+            className="p-1 bg-blue-500/20 text-blue-400 rounded hover:bg-blue-500/30"
+            title="Ver PDF"
+          >
+            <Eye size={14} />
+          </a>
+          <button 
+            onClick={() => openHojaVidaModal(row)}
+            className="p-1 bg-yellow-500/20 text-yellow-400 rounded hover:bg-yellow-500/30"
+            title="Actualizar PDF"
+          >
+            <Upload size={14} />
+          </button>
+        </div>
+      ) : (
+        <button 
+          onClick={() => openHojaVidaModal(row)}
+          className="p-1 bg-green-500/20 text-green-400 rounded hover:bg-green-500/30"
+          title="Subir PDF"
+        >
+          <Upload size={14} />
+        </button>
+      )
+    )},
   ]
 
   const modelosDisponibles = formData.marca ? MODELOS_POR_MARCA[formData.marca] || [] : []
@@ -356,6 +462,62 @@ export default function EquiposComputoPage() {
             <Button type="submit">{editData ? 'Actualizar' : 'Crear'}</Button>
           </div>
         </form>
+      </Modal>
+
+      <Modal isOpen={showHojaVidaModal} onClose={() => setShowHojaVidaModal(false)} title={`Hoja de Vida - ${selectedEquipo?.marca} ${selectedEquipo?.modelo}`} size="md">
+        <div className="space-y-4">
+          {selectedEquipo?.hojaVidaUrl && (
+            <div className="p-3 bg-slate-800/50 rounded-lg border border-green-500/30">
+              <p className="text-sm text-green-300 mb-2">Archivo actual:</p>
+              <div className="flex items-center justify-between">
+                <a 
+                  href={selectedEquipo.hojaVidaUrl} 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-2 text-blue-400 hover:text-blue-300"
+                >
+                  <FileText size={16} />
+                  <span className="text-sm">Ver PDF actual</span>
+                </a>
+                <button 
+                  onClick={() => handleDeleteHojaVida(selectedEquipo)}
+                  className="p-1 bg-red-500/20 text-red-400 rounded hover:bg-red-500/30"
+                  title="Eliminar"
+                >
+                  <X size={14} />
+                </button>
+              </div>
+            </div>
+          )}
+
+          <div>
+            <label className="block mb-2 text-sm font-medium text-green-300/90">
+              {selectedEquipo?.hojaVidaUrl ? 'Reemplazar archivo PDF' : 'Subir archivo PDF'}
+            </label>
+            <input
+              type="file"
+              accept="application/pdf"
+              onChange={handleFileChange}
+              className="w-full px-3 py-2 bg-slate-800/50 border border-green-500/30 rounded-lg text-white text-sm file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-green-500/20 file:text-green-400 hover:file:bg-green-500/30"
+            />
+            {hojaVidaFile && (
+              <p className="mt-2 text-sm text-green-400 flex items-center gap-1">
+                <FileText size={14} />
+                {hojaVidaFile.name}
+              </p>
+            )}
+          </div>
+
+          <div className="flex justify-end gap-2 pt-2">
+            <Button type="button" variant="secondary" onClick={() => setShowHojaVidaModal(false)}>Cancelar</Button>
+            <Button 
+              onClick={handleUploadHojaVida} 
+              disabled={!hojaVidaFile || uploading}
+            >
+              {uploading ? 'Subiendo...' : 'Subir PDF'}
+            </Button>
+          </div>
+        </div>
       </Modal>
     </CRUDBase>
   )
