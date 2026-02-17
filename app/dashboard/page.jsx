@@ -37,12 +37,28 @@ export default function Dashboard() {
   const [notifSinLeer, setNotifSinLeer] = useState(0)
   const [showNotif, setShowNotif] = useState(false)
   const [dashboardData, setDashboardData] = useState(null)
+  const [tareasRecientes, setTareasRecientes] = useState([])
+  const [tareasOverdue, setTareasOverdue] = useState(0)
 
   useEffect(() => {
     fetchUser()
     fetchNotificaciones()
     fetchDashboardData()
+    fetchTareas()
   }, [])
+
+  const fetchTareas = async () => {
+    try {
+      const res = await fetch('/api/tareas', { credentials: 'include' })
+      if (res.ok) {
+        const data = await res.json()
+        setTareasRecientes(data.tareas.slice(0, 5))
+        setTareasOverdue(data.overdueCount || 0)
+      }
+    } catch (error) {
+      console.error('Error:', error)
+    }
+  }
 
   const fetchUser = async () => {
     try {
@@ -114,6 +130,47 @@ export default function Dashboard() {
   const handleLogout = async () => {
     document.cookie = 'token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;'
     window.location.href = '/login'
+  }
+
+  const handleTareaEstadoChange = async (tareaId, nuevoEstado) => {
+    try {
+      await fetch(`/api/tareas/${tareaId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ estado: nuevoEstado }),
+      })
+      fetchTareas()
+    } catch (error) {
+      console.error('Error:', error)
+    }
+  }
+
+  const getPrioridadColor = (prioridad) => {
+    const colors = {
+      Urgente: 'text-red-400 bg-red-500/20',
+      Alta: 'text-orange-400 bg-orange-500/20',
+      Media: 'text-yellow-400 bg-yellow-500/20',
+      Baja: 'text-green-400 bg-green-500/20',
+    }
+    return colors[prioridad] || colors.Media
+  }
+
+  const getEstadoColor = (estado) => {
+    const colors = {
+      Pendiente: 'text-slate-400 bg-slate-500/20',
+      EnProceso: 'text-blue-400 bg-blue-500/20',
+      Completada: 'text-green-400 bg-green-500/20',
+      Cancelada: 'text-red-400 bg-red-500/20',
+    }
+    return colors[estado] || colors.Pendiente
+  }
+
+  const isOverdue = (tarea) => {
+    if (tarea.fechaLimite && tarea.estado !== 'Completada' && tarea.estado !== 'Cancelada') {
+      return new Date(tarea.fechaLimite) < new Date()
+    }
+    return false
   }
 
   useEffect(() => {
@@ -299,7 +356,80 @@ export default function Dashboard() {
             <p className="text-green-400/70">Panel de Control - {user?.rol}</p>
           </motion.div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="bg-slate-800/50 border border-green-500/20 rounded-xl p-4 md:p-6 mb-6"
+          >
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-4">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-purple-500/20 rounded-lg">
+                  <CheckSquare size={20} className="text-purple-400" />
+                </div>
+                <div>
+                  <h3 className="text-white font-medium">Tareas Recientes</h3>
+                  <p className="text-slate-400 text-sm">Gestión rápida de tareas</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-3">
+                {tareasOverdue > 0 && (
+                  <span className="px-3 py-1 bg-red-500/20 text-red-400 rounded-full text-sm flex items-center gap-1">
+                    <AlertTriangle size={14} />
+                    {tareasOverdue} vencida{tareasOverdue > 1 ? 's' : ''}
+                  </span>
+                )}
+                <button 
+                  onClick={() => window.location.href = '/tareas'}
+                  className="text-green-400 hover:text-green-300 text-sm"
+                >
+                  Ver todas →
+                </button>
+              </div>
+            </div>
+
+            {tareasRecientes.length > 0 ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3">
+                {tareasRecientes.map((tarea) => (
+                  <div 
+                    key={tarea.id}
+                    className={`p-3 rounded-lg border ${isOverdue(tarea) ? 'border-red-500/50 bg-red-500/10' : 'border-green-500/20 bg-slate-700/30'} hover:border-green-500/40 transition-all`}
+                  >
+                    <div className="flex items-start justify-between mb-2">
+                      <span className={`px-2 py-0.5 rounded text-xs ${getPrioridadColor(tarea.prioridad)}`}>
+                        {tarea.prioridad}
+                      </span>
+                      {isOverdue(tarea) && <AlertTriangle size={14} className="text-red-400" />}
+                    </div>
+                    <h4 className="text-white text-sm font-medium mb-2 line-clamp-2">{tarea.titulo}</h4>
+                    <div className="flex items-center justify-between">
+                      <span className={`px-2 py-0.5 rounded text-xs ${getEstadoColor(tarea.estado)}`}>
+                        {tarea.estado === 'EnProceso' ? 'En Proceso' : tarea.estado}
+                      </span>
+                      {tarea.estado !== 'Completada' && tarea.estado !== 'Cancelada' && (
+                        <select
+                          value={tarea.estado}
+                          onChange={(e) => handleTareaEstadoChange(tarea.id, e.target.value)}
+                          className="text-xs bg-slate-600 text-white rounded px-1 py-0.5 border-none cursor-pointer"
+                        >
+                          <option value="Pendiente">Pendiente</option>
+                          <option value="EnProceso">En Proceso</option>
+                          <option value="Completada">Completada</option>
+                          <option value="Cancelada">Cancelada</option>
+                        </select>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-8 text-slate-400">
+                <CheckCircle size={32} className="mx-auto mb-2 opacity-50" />
+                <p>No hay tareas pendientes</p>
+              </div>
+            )}
+          </motion.div>
+
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-6">
             {[
               { label: 'Tickets Abiertos', value: dashboardData?.stats?.ticketsAbiertos || 0, icon: AlertCircle, color: 'bg-red-500', href: '/tickets' },
               { label: 'Equipos Activos', value: dashboardData?.stats?.equiposActivos || 0, icon: Computer, color: 'bg-green-500', href: '/equipos/computo' },
