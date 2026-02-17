@@ -69,6 +69,7 @@ export async function PUT(request, { params }) {
 
     return NextResponse.json(prestamo)
   } catch (error) {
+    console.error('Error updating prestamo:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }

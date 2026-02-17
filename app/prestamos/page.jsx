@@ -90,6 +90,9 @@ export default function PrestamosPage() {
     try {
       const url = editData ? `/api/prestamos/${editData.id}` : '/api/prestamos'
       const method = editData ? 'PUT' : 'POST'
+
+      const fechaPrestamoLocal = formData.fechaPrestamo ? new Date(formData.fechaPrestamo + 'T12:00:00') : null
+      const fechaDevolucionLocal = formData.fechaDevolucion ? new Date(formData.fechaDevolucion + 'T12:00:00') : null
       
       const res = await fetch(url, {
         method,
@@ -100,8 +103,8 @@ export default function PrestamosPage() {
           equipoComputoId: formData.equipoComputoId || null,
           perifericoId: formData.perifericoId || null,
           audiovisualId: formData.audiovisualId || null,
-          fechaPrestamo: formData.fechaPrestamo,
-          fechaDevolucion: formData.fechaDevolucion || null,
+          fechaPrestamo: fechaPrestamoLocal?.toISOString() || null,
+          fechaDevolucion: fechaDevolucionLocal?.toISOString() || null,
           estado: formData.estado,
           observaciones: observaciones.value,
           ...checklist,
