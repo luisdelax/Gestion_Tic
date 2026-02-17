@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
+import { AlertCircle, Eye, EyeOff, Mail, Lock } from 'lucide-react'
 
 export default function Login() {
   const [email, setEmail] = useState('')
@@ -9,6 +10,9 @@ export default function Login() {
   const [loading, setLoading] = useState(false)
   const [mounted, setMounted] = useState(false)
   const [particles, setParticles] = useState([])
+  const [error, setError] = useState('')
+  const [showPassword, setShowPassword] = useState(false)
+  const [errorAnimation, setErrorAnimation] = useState(false)
 
   useEffect(() => {
     setMounted(true)
@@ -22,6 +26,7 @@ export default function Login() {
   const handleSubmit = async (e) => {
     e.preventDefault()
     setLoading(true)
+    setError('')
     
     try {
       const res = await fetch('/api/auth/login', { credentials: 'include', 
@@ -35,10 +40,15 @@ export default function Login() {
       if (res.ok) {
         window.location.href = '/dashboard'
       } else {
-        alert(data.error || 'Error al iniciar sesión')
+        setError(data.error || 'Credenciales incorrectas')
+        setErrorAnimation(true)
+        setTimeout(() => setErrorAnimation(false), 500)
       }
     } catch (error) {
       console.error('Error:', error)
+      setError('Error de conexión. Intenta nuevamente.')
+      setErrorAnimation(true)
+      setTimeout(() => setErrorAnimation(false), 500)
     } finally {
       setLoading(false)
     }
@@ -94,15 +104,61 @@ export default function Login() {
             <label className="block mb-2 text-sm font-medium text-green-300/90">
               Correo Electrónico
             </label>
-            <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="w-full px-4 py-3 text-white bg-slate-800/50 border border-green-500/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-400/50 focus:border-transparent transition-all duration-300 placeholder-slate-500"
-              placeholder="admin@sistema.com"
-              required
-            />
+            <div className="relative">
+              <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" size={18} />
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="w-full pl-10 pr-4 py-3 text-white bg-slate-800/50 border border-green-500/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-400/50 focus:border-transparent transition-all duration-300 placeholder-slate-500"
+                placeholder="admin@sistema.com"
+                required
+              />
+            </div>
           </div>
+          <div>
+            <label className="block mb-2 text-sm font-medium text-green-300/90">
+              Contraseña
+            </label>
+            <div className="relative">
+              <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" size={18} />
+              <input
+                type={showPassword ? "text" : "password"}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="w-full pl-10 pr-12 py-3 text-white bg-slate-800/50 border border-green-500/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-400/50 focus:border-transparent transition-all duration-300 placeholder-slate-500"
+                placeholder="••••••••"
+                required
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-green-400 transition-colors"
+              >
+                {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+              </button>
+            </div>
+          </div>
+
+          {error && (
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className={`p-4 rounded-lg border ${
+                errorAnimation 
+                  ? 'bg-red-500/20 border-red-500/50 animate-shake' 
+                  : 'bg-red-500/10 border-red-500/30'
+              }`}
+            >
+              <div className="flex items-center gap-3">
+                <AlertCircle className="text-red-400 flex-shrink-0" size={20} />
+                <div>
+                  <p className="text-red-400 font-medium text-sm">Error de autenticación</p>
+                  <p className="text-red-300/70 text-xs">{error}</p>
+                </div>
+              </div>
+            </motion.div>
+          )}
           <div>
             <label className="block mb-2 text-sm font-medium text-green-300/90">
               Contraseña
