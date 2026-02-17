@@ -25,7 +25,8 @@ import {
   Filter,
   Monitor,
   MapPin,
-  UserCog
+  UserCog,
+  CheckSquare
 } from 'lucide-react'
 
 export function toUpperCase(value, isEmail = false) {
@@ -95,6 +96,7 @@ export default function CRUDBase({ children, title, subtitle }) {
     { icon: Settings, label: 'Periféricos', href: '/perifericos' },
     { icon: Speaker, label: 'Audiovisuales', href: '/audiovisuales' },
     { icon: Ticket, label: 'Tickets', href: '/tickets' },
+    { icon: CheckSquare, label: 'Tareas', href: '/tareas' },
     { icon: MapPin, label: 'Ubicaciones', href: '/ubicaciones' },
     { icon: Warehouse, label: 'Préstamos', href: '/prestamos' },
     { icon: Calendar, label: 'Auditorio', href: '/auditorio' },
