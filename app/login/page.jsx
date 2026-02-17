@@ -159,19 +159,6 @@ export default function Login() {
               </div>
             </motion.div>
           )}
-          <div>
-            <label className="block mb-2 text-sm font-medium text-green-300/90">
-              Contraseña
-            </label>
-            <input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="w-full px-4 py-3 text-white bg-slate-800/50 border border-green-500/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-400/50 focus:border-transparent transition-all duration-300 placeholder-slate-500"
-              placeholder="••••••••"
-              required
-            />
-          </div>
 
           <motion.button
             whileHover={{ scale: 1.02 }}
