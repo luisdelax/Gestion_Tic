@@ -248,7 +248,7 @@ export default function CRUDBase({ children, title, subtitle }) {
           </div>
         </header>
 
-        <main className="p-4 md:p-6">
+        <main className="p-4 md:p-6 pb-24">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -261,7 +261,28 @@ export default function CRUDBase({ children, title, subtitle }) {
           {children}
         </main>
 
-        <footer className="py-4 px-6 border-t border-green-500/20 bg-slate-900/50">
+        {/* Mobile Bottom Navigation */}
+        <nav className="fixed bottom-0 left-0 right-0 bg-slate-950/95 backdrop-blur-lg border-t border-green-500/20 lg:hidden z-50 safe-area-pb">
+          <div className="flex justify-around items-center h-16">
+            {menuItems.slice(0, 5).map((item) => {
+              const isActive = activePath === item.href
+              return (
+                <a
+                  key={item.href}
+                  href={item.href}
+                  className={`flex flex-col items-center justify-center p-2 ${
+                    isActive ? 'text-green-400' : 'text-slate-400'
+                  }`}
+                >
+                  <item.icon size={22} />
+                  <span className="text-[10px] mt-1">{item.label}</span>
+                </a>
+              )
+            })}
+          </div>
+        </nav>
+
+        <footer className="hidden lg:block py-4 px-6 border-t border-green-500/20 bg-slate-900/50">
           <p className="text-center text-slate-500 text-sm">
             © 2024 Dinamiz TIC. Todos los derechos reservados a Luis E De La Cruz Fajardo
           </p>

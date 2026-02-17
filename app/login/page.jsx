@@ -90,13 +90,18 @@ export default function Login() {
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
-        className="relative z-10 w-full max-w-md p-8 rounded-2xl glass neon-border shadow-2xl shadow-green-500/20"
+        className="relative z-10 w-full max-w-md p-6 md:p-8 rounded-2xl glass neon-border shadow-2xl shadow-green-500/20 mx-4"
       >
-        <h2 className="mb-2 text-3xl font-bold text-center text-white">
-          Acceso al Sistema
-        </h2>
-        <p className="mb-8 text-center text-green-400/70">
+        <div className="flex justify-center mb-6">
+          <div className="w-16 h-16 rounded-2xl bg-green-500/20 border border-green-500/30 flex items-center justify-center">
+            <span className="text-3xl font-bold text-green-400">DT</span>
+          </div>
+        </div>
+        <h2 className="mb-2 text-2xl md:text-3xl font-bold text-center text-white">
           Dinamiz TIC
+        </h2>
+        <p className="mb-6 md:mb-8 text-center text-green-400/70 text-sm md:text-base">
+          Sistema de Gestión
         </p>
 
         <form onSubmit={handleSubmit} className="space-y-6">
