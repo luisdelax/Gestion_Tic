@@ -53,6 +53,13 @@ export default function PrestamosPage() {
   })
 
   useEffect(() => {
+    if (!modalOpen) return
+    if (!editData) {
+      resetForm()
+    }
+  }, [modalOpen])
+
+  useEffect(() => {
     fetchData()
   }, [])
 
