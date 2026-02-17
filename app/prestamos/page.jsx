@@ -285,7 +285,11 @@ export default function PrestamosPage() {
   return (
     <CRUDBase title="Préstamos" subtitle="Gestión de préstamos de equipos">
       <div className="mb-6 flex justify-end">
-        <Button onClick={() => { resetForm(); setEditData(null); setModalOpen(true) }}>
+        <Button onClick={() => { 
+          setEditData(null)
+          resetForm()
+          setModalOpen(true) 
+        }}>
           <span className="flex items-center gap-2">
             <Plus size={18} /> Nuevo Préstamo
           </span>
