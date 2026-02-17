@@ -52,6 +52,10 @@ export async function PUT(request, { params }) {
 
     const data = await request.json()
 
+    const prestamoActual = await prisma.prestamo.findUnique({
+      where: { id: parseInt(id) }
+    })
+
     const prestamo = await prisma.prestamo.update({
       where: { id: parseInt(id) },
       data: {
@@ -66,6 +70,27 @@ export async function PUT(request, { params }) {
         mouse: data.mouse || false,
       },
     })
+
+    if (data.estado === 'Devuelto') {
+      if (prestamoActual?.equipoComputoId) {
+        await prisma.equipoComputo.update({
+          where: { id: prestamoActual.equipoComputoId },
+          data: { estado: 'Disponible' }
+        })
+      }
+      if (prestamoActual?.perifericoId) {
+        await prisma.periferico.update({
+          where: { id: prestamoActual.perifericoId },
+          data: { estado: 'Disponible' }
+        })
+      }
+      if (prestamoActual?.audiovisualId) {
+        await prisma.equipoAudiovisual.update({
+          where: { id: prestamoActual.audiovisualId },
+          data: { estado: 'Disponible' }
+        })
+      }
+    }
 
     return NextResponse.json(prestamo)
   } catch (error) {

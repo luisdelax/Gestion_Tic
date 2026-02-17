@@ -24,6 +24,7 @@ const estadosEquipo = [
   { value: 'Asignado', label: 'Asignado' },
   { value: 'EnReparacion', label: 'En Reparación' },
   { value: 'DadoDeBaja', label: 'Dado de Baja' },
+  { value: 'Prestado', label: 'Prestado' },
 ]
 
 export default function EquiposComputoPage() {
@@ -283,12 +284,14 @@ export default function EquiposComputoPage() {
       Asignado: 'bg-blue-500/20 text-blue-400 border-blue-500/30',
       EnReparacion: 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30',
       DadoDeBaja: 'bg-red-500/20 text-red-400 border-red-500/30',
+      Prestado: 'bg-purple-500/20 text-purple-400 border-purple-500/30',
     }
     const labels = {
       Disponible: 'Disponible',
       Asignado: 'Asignado',
       EnReparacion: 'En Reparación',
       DadoDeBaja: 'Dado de Baja',
+      Prestado: 'Prestado',
     }
     return <span className={`px-2 py-1 rounded-full text-xs border ${colors[estado]}`}>{labels[estado]}</span>
   }

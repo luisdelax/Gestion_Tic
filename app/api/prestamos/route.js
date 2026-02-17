@@ -86,6 +86,25 @@ export async function POST(request) {
       },
     })
 
+    if (data.equipoComputoId) {
+      await prisma.equipoComputo.update({
+        where: { id: data.equipoComputoId },
+        data: { estado: 'Prestado' }
+      })
+    }
+    if (data.perifericoId) {
+      await prisma.periferico.update({
+        where: { id: data.perifericoId },
+        data: { estado: 'Prestado' }
+      })
+    }
+    if (data.audiovisualId) {
+      await prisma.equipoAudiovisual.update({
+        where: { id: data.audiovisualId },
+        data: { estado: 'Prestado' }
+      })
+    }
+
     return NextResponse.json(prestamo)
   } catch (error) {
     console.error('Error:', error)

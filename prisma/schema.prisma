@@ -36,6 +36,7 @@ enum EstadoEquipo {
   Asignado
   EnReparacion
   DadoDeBaja
+  Prestado
 }
 
 enum TipoEquipoTelecom {
