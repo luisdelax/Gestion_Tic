@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import CRUDBase, { DataTable, Modal, Button, Input, useUpperCase } from '@/components/CRUDBase'
-import { Plus, Upload, FileText, X, Eye } from 'lucide-react'
+import { Plus, Upload, FileText, X, Eye, Search } from 'lucide-react'
 import { 
   MARCAS_COMPUTADORAS, 
   MODELOS_POR_MARCA, 
@@ -30,6 +30,7 @@ const estadosEquipo = [
 export default function EquiposComputoPage() {
   const [equipos, setEquipos] = useState([])
   const [funcionarios, setFuncionarios] = useState([])
+  const [ubicaciones, setUbicaciones] = useState([])
   const [loading, setLoading] = useState(true)
   const [modalOpen, setModalOpen] = useState(false)
   const [editData, setEditData] = useState(null)
@@ -39,7 +40,6 @@ export default function EquiposComputoPage() {
   const serial = useUpperCase('')
   const mac = useUpperCase('')
   const placa = useUpperCase('')
-  const ubicacion = useUpperCase('')
   const dependencia = useUpperCase('')
   const observaciones = useUpperCase('')
 
@@ -52,17 +52,21 @@ export default function EquiposComputoPage() {
     placa: '',
     procesador: '',
     ram: '',
-    unidadRam: 'GB',
     discoDuro: '',
     unidadDisco: 'GB',
     estado: 'Disponible',
-    ubicacion: '',
+    ubicacionId: '',
     dependencia: '',
     fechaAdquisicion: '',
     fechaGarantia: '',
     observaciones: '',
     responsableId: '',
   })
+
+  const [searchUbicacion, setSearchUbicacion] = useState('')
+  const [showUbicacionList, setShowUbicacionList] = useState(false)
+  const [searchResponsable, setSearchResponsable] = useState('')
+  const [showResponsableList, setShowResponsableList] = useState(false)
 
   const [uploading, setUploading] = useState(false)
   const [hojaVidaFile, setHojaVidaFile] = useState(null)
@@ -75,13 +79,15 @@ export default function EquiposComputoPage() {
 
   const fetchData = async () => {
     try {
-      const [eqRes, funcRes] = await Promise.all([
+      const [eqRes, funcRes, ubiRes] = await Promise.all([
         fetch('/api/equipos/computo', { credentials: 'include' }),
-        fetch('/api/funcionarios', { credentials: 'include' })
+        fetch('/api/funcionarios', { credentials: 'include' }),
+        fetch('/api/ubicaciones', { credentials: 'include' })
       ])
       
       if (eqRes.ok) setEquipos(await eqRes.json())
       if (funcRes.ok) setFuncionarios(await funcRes.json())
+      if (ubiRes.ok) setUbicaciones(await ubiRes.json())
     } catch (error) {
       console.error('Error:', error)
     } finally {
@@ -107,11 +113,10 @@ export default function EquiposComputoPage() {
           placa: placa.value || null,
           procesador: formData.procesador,
           ram: formData.ram,
-          unidadRam: formData.unidadRam,
           discoDuro: formData.discoDuro,
           unidadDisco: formData.unidadDisco,
           estado: formData.estado,
-          ubicacion: ubicacion.value,
+          ubicacionId: formData.ubicacionId || null,
           dependencia: dependencia.value,
           fechaAdquisicion: formData.fechaAdquisicion,
           fechaGarantia: formData.fechaGarantia,
@@ -141,9 +146,23 @@ export default function EquiposComputoPage() {
     serial.setValue(equipo.serial)
     mac.setValue(equipo.mac || '')
     placa.setValue(equipo.placa || '')
-    ubicacion.setValue(equipo.ubicacion || '')
     dependencia.setValue(equipo.dependencia || '')
     observaciones.setValue(equipo.observaciones || '')
+    
+    if (equipo.ubicacionObj) {
+      setSearchUbicacion(equipo.ubicacionObj.nombre)
+    } else if (equipo.ubicacion) {
+      setSearchUbicacion(equipo.ubicacion)
+    } else {
+      setSearchUbicacion('')
+    }
+    
+    if (equipo.responsable) {
+      setSearchResponsable(`${equipo.responsable.nombre} ${equipo.responsable.apellido}`)
+    } else {
+      setSearchResponsable('')
+    }
+    
     setFormData({
       tipo: equipo.tipo,
       marca: equipo.marca,
@@ -151,12 +170,12 @@ export default function EquiposComputoPage() {
       estado: equipo.estado,
       procesador: equipo.procesador || '',
       ram: equipo.ram || '',
-      unidadRam: equipo.unidadRam || 'GB',
       discoDuro: equipo.discoDuro || '',
       unidadDisco: equipo.unidadDisco || 'GB',
       fechaAdquisicion: equipo.fechaAdquisicion?.split('T')[0] || '',
       fechaGarantia: equipo.fechaGarantia?.split('T')[0] || '',
       responsableId: equipo.responsableId || '',
+      ubicacionId: equipo.ubicacionId || '',
     })
     setModalOpen(true)
   }
@@ -182,7 +201,6 @@ export default function EquiposComputoPage() {
     serial.setValue('')
     mac.setValue('')
     placa.setValue('')
-    ubicacion.setValue('')
     dependencia.setValue('')
     observaciones.setValue('')
     setFormData({
@@ -194,18 +212,31 @@ export default function EquiposComputoPage() {
       placa: '',
       procesador: '',
       ram: '',
-      unidadRam: 'GB',
       discoDuro: '',
       unidadDisco: 'GB',
       estado: 'Disponible',
-      ubicacion: '',
+      ubicacionId: '',
       dependencia: '',
       fechaAdquisicion: '',
       fechaGarantia: '',
       observaciones: '',
       responsableId: '',
     })
+    setSearchUbicacion('')
+    setSearchResponsable('')
     setHojaVidaFile(null)
+  }
+
+  const selectUbicacion = (ubi) => {
+    setFormData({...formData, ubicacionId: ubi.id})
+    setSearchUbicacion(ubi.nombre)
+    setShowUbicacionList(false)
+  }
+
+  const selectResponsable = (func) => {
+    setFormData({...formData, responsableId: func.id})
+    setSearchResponsable(`${func.nombre} ${func.apellido}`)
+    setShowResponsableList(false)
   }
 
   const handleFileChange = (e) => {
@@ -303,7 +334,7 @@ export default function EquiposComputoPage() {
     { key: 'marca', header: 'Marca' },
     { key: 'modelo', header: 'Modelo' },
     { key: 'estado', header: 'Estado', render: (val) => getEstadoBadge(val) },
-    { key: 'ubicacion', header: 'Ubicación' },
+    { key: 'ubicacion', header: 'Ubicación', render: (_, row) => row.ubicacionObj?.nombre || row.ubicacion || '-' },
     { key: 'hojaVida', header: 'Hoja Vida', render: (_, row) => (
       row.hojaVidaUrl ? (
         <div className="flex gap-1">
@@ -406,22 +437,13 @@ export default function EquiposComputoPage() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="grid grid-cols-2 gap-2">
-              <Input 
-                label="RAM" 
-                type="select" 
-                value={formData.ram} 
-                onChange={(e) => setFormData({...formData, ram: e.target.value})} 
-                options={OPCIONES_RAM} 
-              />
-              <Input 
-                label="Unidad RAM" 
-                type="select" 
-                value={formData.unidadRam} 
-                onChange={(e) => setFormData({...formData, unidadRam: e.target.value})} 
-                options={UNIDADES_ALMACENAMIENTO} 
-              />
-            </div>
+            <Input 
+              label="RAM" 
+              type="select" 
+              value={formData.ram} 
+              onChange={(e) => setFormData({...formData, ram: e.target.value})} 
+              options={OPCIONES_RAM} 
+            />
             <div className="grid grid-cols-2 gap-2">
               <Input 
                 label="Disco Duro" 
@@ -441,7 +463,42 @@ export default function EquiposComputoPage() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <Input label="Ubicación" {...ubicacion} placeholder="OFICINA 101" />
+            <div className="relative">
+              <label className="block mb-1.5 md:mb-2 text-xs md:text-sm font-medium text-green-300/90">Ubicación</label>
+              <div className="relative">
+                <input
+                  type="text"
+                  value={searchUbicacion}
+                  onChange={(e) => {
+                    setSearchUbicacion(e.target.value)
+                    setShowUbicacionList(true)
+                    if (e.target.value === '') {
+                      setFormData({...formData, ubicacionId: ''})
+                    }
+                  }}
+                  onFocus={() => setShowUbicacionList(true)}
+                  placeholder="BUSCAR UBICACIÓN..."
+                  className="w-full px-3 py-2 md:py-2.5 bg-slate-800/50 border border-green-500/30 rounded-lg text-white text-sm md:text-base placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-green-400/50 uppercase"
+                />
+                <Search size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500" />
+              </div>
+              
+              {showUbicacionList && ubicaciones.filter(u => u.activo).length > 0 && (
+                <div className="absolute z-10 w-full mt-1 bg-slate-800 border border-green-500/30 rounded-lg max-h-48 overflow-y-auto">
+                  {ubicaciones.filter(u => u.activo).slice(0, 8).map((ubi) => (
+                    <button
+                      key={ubi.id}
+                      type="button"
+                      onClick={() => selectUbicacion(ubi)}
+                      className="w-full text-left px-3 py-2 text-white hover:bg-slate-700 border-b border-green-500/10 last:border-0"
+                    >
+                      <p className="text-sm font-medium">{ubi.nombre}</p>
+                      <p className="text-xs text-slate-400">{ubi.tipo}</p>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
             <Input label="Dependencia" {...dependencia} placeholder="ÁREA" />
           </div>
 
@@ -450,13 +507,42 @@ export default function EquiposComputoPage() {
             <Input label="Fecha Garantía" type="date" value={formData.fechaGarantia} onChange={(e) => setFormData({...formData, fechaGarantia: e.target.value})} />
           </div>
 
-          <Input 
-            label="Responsable" 
-            type="select" 
-            value={formData.responsableId} 
-            onChange={(e) => setFormData({...formData, responsableId: e.target.value})} 
-            options={funcionarios.map(f => ({ value: f.id, label: `${f.nombre} ${f.apellido}` }))} 
-          />
+          <div className="relative">
+            <label className="block mb-1.5 md:mb-2 text-xs md:text-sm font-medium text-green-300/90">Responsable</label>
+            <div className="relative">
+              <input
+                type="text"
+                value={searchResponsable}
+                onChange={(e) => {
+                  setSearchResponsable(e.target.value)
+                  setShowResponsableList(true)
+                  if (e.target.value === '') {
+                    setFormData({...formData, responsableId: ''})
+                  }
+                }}
+                onFocus={() => setShowResponsableList(true)}
+                placeholder="BUSCAR RESPONSABLE..."
+                className="w-full px-3 py-2 md:py-2.5 bg-slate-800/50 border border-green-500/30 rounded-lg text-white text-sm md:text-base placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-green-400/50 uppercase"
+              />
+              <Search size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500" />
+            </div>
+            
+            {showResponsableList && funcionarios.length > 0 && (
+              <div className="absolute z-10 w-full mt-1 bg-slate-800 border border-green-500/30 rounded-lg max-h-48 overflow-y-auto">
+                {funcionarios.slice(0, 8).map((func) => (
+                  <button
+                    key={func.id}
+                    type="button"
+                    onClick={() => selectResponsable(func)}
+                    className="w-full text-left px-3 py-2 text-white hover:bg-slate-700 border-b border-green-500/10 last:border-0"
+                  >
+                    <p className="text-sm font-medium">{func.nombre} {func.apellido}</p>
+                    <p className="text-xs text-slate-400">{func.cedula} - {func.dependencia}</p>
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
           
           <Input label="Observaciones" type="textarea" {...observaciones} placeholder="NOTAS ADICIONALES..." />
           

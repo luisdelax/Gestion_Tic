@@ -1,8 +1,9 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import CRUDBase, { DataTable, Modal, Button, Input, useUpperCase } from '@/components/CRUDBase'
-import { Plus } from 'lucide-react'
+import { Plus, Upload, FileText, X, Eye, Search } from 'lucide-react'
+import { MARCAS_TELECOM, MODELOS_TELECOM } from '@/lib/constantes'
 
 const tiposTelecom = [
   { value: 'Switch', label: 'Switch' },
@@ -20,10 +21,12 @@ const estadosEquipo = [
   { value: 'Asignado', label: 'Asignado' },
   { value: 'EnReparacion', label: 'En Reparación' },
   { value: 'DadoDeBaja', label: 'Dado de Baja' },
+  { value: 'Prestado', label: 'Prestado' },
 ]
 
 export default function EquiposTelecomPage() {
   const [equipos, setEquipos] = useState([])
+  const [ubicaciones, setUbicaciones] = useState([])
   const [loading, setLoading] = useState(true)
   const [modalOpen, setModalOpen] = useState(false)
   const [editData, setEditData] = useState(null)
@@ -33,9 +36,12 @@ export default function EquiposTelecomPage() {
   const serial = useUpperCase('')
   const mac = useUpperCase('')
   const ip = useUpperCase('')
-  const ubicacion = useUpperCase('')
+  const placa = useUpperCase('')
   const dependencia = useUpperCase('')
   const observaciones = useUpperCase('')
+
+  const [searchUbicacion, setSearchUbicacion] = useState('')
+  const [showUbicacionList, setShowUbicacionList] = useState(false)
 
   const [formData, setFormData] = useState({
     tipo: '',
@@ -44,12 +50,18 @@ export default function EquiposTelecomPage() {
     serial: '',
     mac: '',
     ip: '',
+    placa: '',
     estado: 'Disponible',
-    ubicacion: '',
+    ubicacionId: '',
     dependencia: '',
     fechaAdquisicion: '',
     observaciones: '',
   })
+
+  const [uploading, setUploading] = useState(false)
+  const [hojaVidaFile, setHojaVidaFile] = useState(null)
+  const [showHojaVidaModal, setShowHojaVidaModal] = useState(false)
+  const [selectedEquipo, setSelectedEquipo] = useState(null)
 
   useEffect(() => {
     fetchEquipos()
@@ -57,11 +69,12 @@ export default function EquiposTelecomPage() {
 
   const fetchEquipos = async () => {
     try {
-      const res = await fetch('/api/equipos/telecom', { credentials: 'include' })
-      if (res.ok) {
-        const data = await res.json()
-        setEquipos(data)
-      }
+      const [eqRes, ubiRes] = await Promise.all([
+        fetch('/api/equipos/telecom', { credentials: 'include' }),
+        fetch('/api/ubicaciones', { credentials: 'include' })
+      ])
+      if (eqRes.ok) setEquipos(await eqRes.json())
+      if (ubiRes.ok) setUbicaciones(await ubiRes.json())
     } catch (error) {
       console.error('Error:', error)
     } finally {
@@ -85,8 +98,9 @@ export default function EquiposTelecomPage() {
           serial: serial.value,
           mac: mac.value.toUpperCase(),
           ip: ip.value,
+          placa: placa.value || null,
           estado: formData.estado,
-          ubicacion: ubicacion.value,
+          ubicacionId: formData.ubicacionId || null,
           dependencia: dependencia.value,
           fechaAdquisicion: formData.fechaAdquisicion,
           observaciones: observaciones.value,
@@ -114,13 +128,25 @@ export default function EquiposTelecomPage() {
     serial.setValue(equipo.serial)
     mac.setValue(equipo.mac || '')
     ip.setValue(equipo.ip || '')
-    ubicacion.setValue(equipo.ubicacion || '')
+    placa.setValue(equipo.placa || '')
     dependencia.setValue(equipo.dependencia || '')
     observaciones.setValue(equipo.observaciones || '')
+    
+    if (equipo.ubicacionObj) {
+      setSearchUbicacion(equipo.ubicacionObj.nombre)
+    } else if (equipo.ubicacion) {
+      setSearchUbicacion(equipo.ubicacion)
+    } else {
+      setSearchUbicacion('')
+    }
+    
     setFormData({
       tipo: equipo.tipo,
+      marca: equipo.marca,
+      modelo: equipo.modelo,
       estado: equipo.estado,
       fechaAdquisicion: equipo.fechaAdquisicion?.split('T')[0] || '',
+      ubicacionId: equipo.ubicacionId || '',
     })
     setModalOpen(true)
   }
@@ -146,9 +172,10 @@ export default function EquiposTelecomPage() {
     serial.setValue('')
     mac.setValue('')
     ip.setValue('')
-    ubicacion.setValue('')
+    placa.setValue('')
     dependencia.setValue('')
     observaciones.setValue('')
+    setSearchUbicacion('')
     setFormData({
       tipo: '',
       marca: '',
@@ -156,12 +183,89 @@ export default function EquiposTelecomPage() {
       serial: '',
       mac: '',
       ip: '',
+      placa: '',
       estado: 'Disponible',
-      ubicacion: '',
+      ubicacionId: '',
       dependencia: '',
       fechaAdquisicion: '',
       observaciones: '',
     })
+    setHojaVidaFile(null)
+  }
+
+  const selectUbicacion = (ubi) => {
+    setFormData({...formData, ubicacionId: ubi.id})
+    setSearchUbicacion(ubi.nombre)
+    setShowUbicacionList(false)
+  }
+
+  const handleFileChange = (e) => {
+    const file = e.target.files[0]
+    if (file) {
+      if (file.type !== 'application/pdf') {
+        alert('Solo se aceptan archivos PDF')
+        return
+      }
+      setHojaVidaFile(file)
+    }
+  }
+
+  const handleUploadHojaVida = async () => {
+    if (!hojaVidaFile || !selectedEquipo) return
+    
+    setUploading(true)
+    try {
+      const formDataFile = new FormData()
+      formDataFile.append('file', hojaVidaFile)
+      formDataFile.append('equipoId', selectedEquipo.id.toString())
+
+      const res = await fetch('/api/equipos/telecom/hojadevida', {
+        method: 'POST',
+        credentials: 'include',
+        body: formDataFile,
+      })
+
+      if (res.ok) {
+        alert('Archivo subido correctamente')
+        setShowHojaVidaModal(false)
+        setHojaVidaFile(null)
+        fetchEquipos()
+      } else {
+        const data = await res.json()
+        alert(data.error || 'Error al subir archivo')
+      }
+    } catch (error) {
+      console.error('Error:', error)
+      alert('Error al subir archivo')
+    } finally {
+      setUploading(false)
+    }
+  }
+
+  const handleDeleteHojaVida = async (equipo) => {
+    if (!confirm('¿Eliminar la hoja de vida?')) return
+    
+    try {
+      const res = await fetch(`/api/equipos/telecom/hojadevida?equipoId=${equipo.id}`, {
+        method: 'DELETE',
+        credentials: 'include',
+      })
+
+      if (res.ok) {
+        alert('Archivo eliminado')
+        fetchEquipos()
+      } else {
+        alert('Error al eliminar archivo')
+      }
+    } catch (error) {
+      console.error('Error:', error)
+    }
+  }
+
+  const openHojaVidaModal = (equipo) => {
+    setSelectedEquipo(equipo)
+    setHojaVidaFile(null)
+    setShowHojaVidaModal(true)
   }
 
   const getEstadoBadge = (estado) => {
@@ -170,12 +274,14 @@ export default function EquiposTelecomPage() {
       Asignado: 'bg-blue-500/20 text-blue-400 border-blue-500/30',
       EnReparacion: 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30',
       DadoDeBaja: 'bg-red-500/20 text-red-400 border-red-500/30',
+      Prestado: 'bg-purple-500/20 text-purple-400 border-purple-500/30',
     }
     const labels = {
       Disponible: 'Disponible',
       Asignado: 'Asignado',
       EnReparacion: 'En Reparación',
       DadoDeBaja: 'Dado de Baja',
+      Prestado: 'Prestado',
     }
     return <span className={`px-2 py-1 rounded-full text-xs border ${colors[estado]}`}>{labels[estado]}</span>
   }
@@ -194,14 +300,47 @@ export default function EquiposTelecomPage() {
     return labels[tipo] || tipo
   }
 
+  const modelosDisponibles = formData.marca ? MODELOS_TELECOM[formData.marca] || [] : []
+
   const columns = [
     { key: 'serial', header: 'Serial' },
+    { key: 'placa', header: 'Placa' },
     { key: 'tipo', header: 'Tipo', render: (val) => getTipoLabel(val) },
     { key: 'marca', header: 'Marca' },
     { key: 'modelo', header: 'Modelo' },
     { key: 'ip', header: 'IP' },
     { key: 'estado', header: 'Estado', render: (val) => getEstadoBadge(val) },
-    { key: 'ubicacion', header: 'Ubicación' },
+    { key: 'ubicacion', header: 'Ubicación', render: (_, row) => row.ubicacionObj?.nombre || row.ubicacion || '-' },
+    { key: 'hojaVida', header: 'Hoja Vida', render: (_, row) => (
+      row.hojaVidaUrl ? (
+        <div className="flex gap-1">
+          <a 
+            href={row.hojaVidaUrl} 
+            target="_blank" 
+            rel="noopener noreferrer"
+            className="p-1 bg-blue-500/20 text-blue-400 rounded hover:bg-blue-500/30"
+            title="Ver PDF"
+          >
+            <Eye size={14} />
+          </a>
+          <button 
+            onClick={() => openHojaVidaModal(row)}
+            className="p-1 bg-yellow-500/20 text-yellow-400 rounded hover:bg-yellow-500/30"
+            title="Actualizar PDF"
+          >
+            <Upload size={14} />
+          </button>
+        </div>
+      ) : (
+        <button 
+          onClick={() => openHojaVidaModal(row)}
+          className="p-1 bg-green-500/20 text-green-400 rounded hover:bg-green-500/30"
+          title="Subir PDF"
+        >
+          <Upload size={14} />
+        </button>
+      )
+    )},
   ]
 
   return (
@@ -228,7 +367,7 @@ export default function EquiposTelecomPage() {
           data={equipos} 
           onEdit={handleEdit}
           onDelete={handleDelete}
-          searchFields={['serial', 'tipo', 'marca', 'modelo', 'ip', 'ubicacion']}
+          searchFields={['serial', 'placa', 'tipo', 'marca', 'modelo', 'ip', 'ubicacion']}
         />
       )}
 
@@ -238,26 +377,138 @@ export default function EquiposTelecomPage() {
             <Input label="Tipo" type="select" value={formData.tipo} onChange={(e) => setFormData({...formData, tipo: e.target.value})} options={tiposTelecom} />
             <Input label="Estado" type="select" value={formData.estado} onChange={(e) => setFormData({...formData, estado: e.target.value})} options={estadosEquipo} />
           </div>
+          
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <Input label="Marca" {...marca} required placeholder="CISCO, TP-LINK..." />
-            <Input label="Modelo" {...modelo} required placeholder="WS-C2960X" />
+            <Input 
+              label="Marca" 
+              type="select" 
+              value={formData.marca} 
+              onChange={(e) => { setFormData({...formData, marca: e.target.value, modelo: ''}); marca.setValue(e.target.value) }} 
+              options={MARCAS_TELECOM} 
+            />
+            <Input 
+              label="Modelo" 
+              type="select" 
+              value={formData.modelo} 
+              onChange={(e) => { setFormData({...formData, modelo: e.target.value}); modelo.setValue(e.target.value) }} 
+              options={modelosDisponibles.map(m => ({ value: m, label: m }))} 
+            />
           </div>
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <Input label="Serial" {...serial} required placeholder="SN123456" />
-            <Input label="MAC" {...mac} placeholder="00:1A:2B:3C:4D:5E" />
+            <Input label="Placa" {...placa} placeholder="PLACA-001" />
           </div>
-          <Input label="Dirección IP" {...ip} placeholder="192.168.1.1" />
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <Input label="Ubicación" {...ubicacion} placeholder="RACK 1" />
+            <Input label="MAC" {...mac} placeholder="00:1A:2B:3C:4D:5E" />
+            <Input label="Dirección IP" {...ip} placeholder="192.168.1.1" />
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="relative">
+              <label className="block mb-1.5 md:mb-2 text-xs md:text-sm font-medium text-green-300/90">Ubicación</label>
+              <div className="relative">
+                <input
+                  type="text"
+                  value={searchUbicacion}
+                  onChange={(e) => {
+                    setSearchUbicacion(e.target.value)
+                    setShowUbicacionList(true)
+                    if (e.target.value === '') {
+                      setFormData({...formData, ubicacionId: ''})
+                    }
+                  }}
+                  onFocus={() => setShowUbicacionList(true)}
+                  placeholder="BUSCAR UBICACIÓN..."
+                  className="w-full px-3 py-2 md:py-2.5 bg-slate-800/50 border border-green-500/30 rounded-lg text-white text-sm md:text-base placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-green-400/50 uppercase"
+                />
+                <Search size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500" />
+              </div>
+              
+              {showUbicacionList && ubicaciones.filter(u => u.activo).length > 0 && (
+                <div className="absolute z-10 w-full mt-1 bg-slate-800 border border-green-500/30 rounded-lg max-h-48 overflow-y-auto">
+                  {ubicaciones.filter(u => u.activo).slice(0, 8).map((ubi) => (
+                    <button
+                      key={ubi.id}
+                      type="button"
+                      onClick={() => selectUbicacion(ubi)}
+                      className="w-full text-left px-3 py-2 text-white hover:bg-slate-700 border-b border-green-500/10 last:border-0"
+                    >
+                      <p className="text-sm font-medium">{ubi.nombre}</p>
+                      <p className="text-xs text-slate-400">{ubi.tipo}</p>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
             <Input label="Dependencia" {...dependencia} placeholder="RED" />
           </div>
+
           <Input label="Fecha Adquisición" type="date" value={formData.fechaAdquisicion} onChange={(e) => setFormData({...formData, fechaAdquisicion: e.target.value})} />
           <Input label="Observaciones" type="textarea" {...observaciones} placeholder="NOTAS ADICIONALES..." />
+          
           <div className="flex flex-col sm:flex-row justify-end gap-2 md:gap-3 pt-4">
             <Button type="button" variant="secondary" onClick={() => setModalOpen(false)}>Cancelar</Button>
             <Button type="submit">{editData ? 'Actualizar' : 'Crear'}</Button>
           </div>
         </form>
+      </Modal>
+
+      <Modal isOpen={showHojaVidaModal} onClose={() => setShowHojaVidaModal(false)} title={`Hoja de Vida - ${selectedEquipo?.marca} ${selectedEquipo?.modelo}`} size="md">
+        <div className="space-y-4">
+          {selectedEquipo?.hojaVidaUrl && (
+            <div className="p-3 bg-slate-800/50 rounded-lg border border-green-500/30">
+              <p className="text-sm text-green-300 mb-2">Archivo actual:</p>
+              <div className="flex items-center justify-between">
+                <a 
+                  href={selectedEquipo.hojaVidaUrl} 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-2 text-blue-400 hover:text-blue-300"
+                >
+                  <FileText size={16} />
+                  <span className="text-sm">Ver PDF actual</span>
+                </a>
+                <button 
+                  onClick={() => handleDeleteHojaVida(selectedEquipo)}
+                  className="p-1 bg-red-500/20 text-red-400 rounded hover:bg-red-500/30"
+                  title="Eliminar"
+                >
+                  <X size={14} />
+                </button>
+              </div>
+            </div>
+          )}
+
+          <div>
+            <label className="block mb-2 text-sm font-medium text-green-300/90">
+              {selectedEquipo?.hojaVidaUrl ? 'Reemplazar archivo PDF' : 'Subir archivo PDF'}
+            </label>
+            <input
+              type="file"
+              accept="application/pdf"
+              onChange={handleFileChange}
+              className="w-full px-3 py-2 bg-slate-800/50 border border-green-500/30 rounded-lg text-white text-sm file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-green-500/20 file:text-green-400 hover:file:bg-green-500/30"
+            />
+            {hojaVidaFile && (
+              <p className="mt-2 text-sm text-green-400 flex items-center gap-1">
+                <FileText size={14} />
+                {hojaVidaFile.name}
+              </p>
+            )}
+          </div>
+
+          <div className="flex justify-end gap-2 pt-2">
+            <Button type="button" variant="secondary" onClick={() => setShowHojaVidaModal(false)}>Cancelar</Button>
+            <Button 
+              onClick={handleUploadHojaVida} 
+              disabled={!hojaVidaFile || uploading}
+            >
+              {uploading ? 'Subiendo...' : 'Subir PDF'}
+            </Button>
+          </div>
+        </div>
       </Modal>
     </CRUDBase>
   )

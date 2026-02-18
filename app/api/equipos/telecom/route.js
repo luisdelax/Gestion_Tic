@@ -31,6 +31,7 @@ export async function GET(request) {
 
     const equipos = await prisma.equipoTelecom.findMany({
       where,
+      include: { ubicacionObj: true },
       orderBy: { createdAt: 'desc' },
     })
 
@@ -69,8 +70,10 @@ export async function POST(request) {
         serial: data.serial,
         mac: data.mac,
         ip: data.ip,
+        placa: data.placa || null,
         estado: data.estado || 'Disponible',
         ubicacion: data.ubicacion,
+        ubicacionId: data.ubicacionId || null,
         dependencia: data.dependencia,
         fechaAdquisicion: data.fechaAdquisicion ? new Date(data.fechaAdquisicion) : null,
         observaciones: data.observaciones,

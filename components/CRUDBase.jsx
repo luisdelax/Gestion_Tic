@@ -50,9 +50,16 @@ export default function CRUDBase({ children, title, subtitle }) {
   const [loading, setLoading] = useState(true)
   const [sidebarOpen, setSidebarOpen] = useState(true)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const [activePath, setActivePath] = useState('/dashboard')
 
   useEffect(() => {
     fetchUser()
+  }, [])
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      setActivePath(window.location.pathname)
+    }
   }, [])
 
   const fetchUser = async () => {

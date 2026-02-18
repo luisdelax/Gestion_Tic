@@ -14,7 +14,7 @@ export async function POST(request) {
 
     const notificacion = await prisma.notificacion.create({
       data: {
-        usuarioId,
+        usuarioId: parseInt(usuarioId),
         titulo,
         mensaje,
         tipo,

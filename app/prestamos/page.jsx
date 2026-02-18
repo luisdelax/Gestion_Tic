@@ -395,6 +395,9 @@ export default function PrestamosPage() {
                     >
                       <p className="text-sm font-medium">{eq.marca} {eq.modelo}</p>
                       <p className="text-xs text-slate-400">{eq.serial}</p>
+                      <p className={`text-xs ${eq.estado === 'Prestado' ? 'text-purple-400' : eq.estado === 'Disponible' ? 'text-green-400' : 'text-slate-500'}`}>
+                        {eq.estado === 'Prestado' ? '⚠ PRESTADO' : eq.estado}
+                      </p>
                     </button>
                   ))}
                 </div>

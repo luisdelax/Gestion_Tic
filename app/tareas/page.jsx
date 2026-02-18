@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import CRUDBase, { DataTable, Modal, Button, Input, useUpperCase } from '@/components/CRUDBase'
-import { Plus, Clock, CheckCircle, AlertTriangle, XCircle, User, Calendar, Flag, Bell, Trash2, Edit } from 'lucide-react'
+import { Plus, Clock, CheckCircle, XCircle, User, Calendar, Flag, Bell, Trash2, Edit, AlertOctagon } from 'lucide-react'
 
 const prioridades = [
   { value: 'Urgente', label: 'Urgente', color: 'text-red-400', bg: 'bg-red-500/20', border: 'border-red-500/30' },
@@ -189,7 +189,13 @@ export default function TareasPage() {
 
   const tareasOrdenadas = [...tareas].sort((a, b) => {
     const ordenPrioridad = { Urgente: 0, Alta: 1, Media: 2, Baja: 3 }
-    return ordenPrioridad[a.prioridad] - ordenPrioridad[b.prioridad]
+    const estadosActivos = ['Pendiente', 'EnProceso']
+    const aActivo = estadosActivos.includes(a.estado)
+    const bActivo = estadosActivos.includes(b.estado)
+    if (aActivo && !bActivo) return -1
+    if (!aActivo && bActivo) return 1
+    if (aActivo && bActivo) return ordenPrioridad[a.prioridad] - ordenPrioridad[b.prioridad]
+    return new Date(b.createdAt) - new Date(a.createdAt)
   })
 
   return (
@@ -227,7 +233,7 @@ export default function TareasPage() {
 
         {overdueCount > 0 && (
           <div className="flex items-center gap-2 px-3 py-1.5 bg-red-500/20 border border-red-500/30 rounded-lg">
-            <AlertTriangle size={16} className="text-red-400" />
+            <AlertOctagon size={16} className="text-red-400" />
             <span className="text-sm text-red-400">{overdueCount} tarea{overdueCount > 1 ? 's' : ''} vencida{overdueCount > 1 ? 's' : ''}</span>
           </div>
         )}
@@ -248,7 +254,7 @@ export default function TareasPage() {
           </div>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 max-h-[calc(100vh-300px)] overflow-y-auto pr-2">
           {tareasOrdenadas.map((tarea) => {
             const prioridad = getPrioridadConfig(tarea.prioridad)
             const estado = getEstadoConfig(tarea.estado)

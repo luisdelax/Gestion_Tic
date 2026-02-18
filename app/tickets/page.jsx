@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react'
 import CRUDBase, { DataTable, Modal, Button, Input, useUpperCase } from '@/components/CRUDBase'
-import { Plus, Eye, CheckCircle, Clock, AlertTriangle, XCircle, Upload, File, Trash2, Image, FileText, Download, Maximize2, X, ZoomIn, ZoomOut, ChevronLeft, ChevronRight, Paperclip } from 'lucide-react'
+import { Plus, Eye, CheckCircle, Clock, XCircle, Upload, File, Trash2, Image, FileText, Download, Maximize2, X, ZoomIn, ZoomOut, ChevronLeft, ChevronRight, Paperclip, AlertOctagon } from 'lucide-react'
 
 const estadosTicket = [
   { value: 'Abierto', label: 'Abierto' },
@@ -231,7 +231,7 @@ export default function TicketsPage() {
 
   const getEstadoBadge = (estado) => {
     const config = {
-      Abierto: { color: 'bg-red-500/20 text-red-400 border-red-500/30', icon: AlertTriangle, bg: 'bg-red-500' },
+      Abierto: { color: 'bg-red-500/20 text-red-400 border-red-500/30', icon: AlertOctagon, bg: 'bg-red-500' },
       EnProceso: { color: 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30', icon: Clock, bg: 'bg-yellow-500' },
       Resuelto: { color: 'bg-blue-500/20 text-blue-400 border-blue-500/30', icon: CheckCircle, bg: 'bg-blue-500' },
       Cerrado: { color: 'bg-green-500/20 text-green-400 border-green-500/30', icon: XCircle, bg: 'bg-green-500' },

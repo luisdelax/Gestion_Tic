@@ -74,7 +74,7 @@ export async function POST(request) {
     if (data.asignadoAId) {
       await prisma.notificacion.create({
         data: {
-          usuarioId: data.asignadoAId,
+          usuarioId: parseInt(data.asignadoAId),
           titulo: 'Nuevo ticket asignado',
           mensaje: `Se te ha asignado el ticket: ${ticket.titulo}`,
           tipo: 'Ticket',

@@ -66,12 +66,10 @@ export async function PUT(request, { params }) {
     }
 
     if (data.asignadoAId !== undefined) {
-      if (data.ubicacionId !== undefined) {
-      updateData.ubicacionId = data.ubicacionId || null
+      updateData.asignadoAId = data.asignadoAId ? parseInt(data.asignadoAId) : null
     }
-    if (data.asignadoAId !== undefined) {
-      updateData.asignadoAId = data.asignadoAId || null
-    }
+    if (data.ubicacionId !== undefined) {
+      updateData.ubicacionId = data.ubicacionId ? parseInt(data.ubicacionId) : null
     }
 
     if (data.estado === 'Cerrado' || data.estado === 'Resuelto') {
@@ -87,7 +85,7 @@ export async function PUT(request, { params }) {
       if (data.asignadoAId && data.asignadoAId !== oldTicket.asignadoAId) {
         await prisma.notificacion.create({
           data: {
-            usuarioId: data.asignadoAId,
+            usuarioId: parseInt(data.asignadoAId),
             titulo: 'Ticket asignado',
             mensaje: `Se te ha asignado el ticket: ${ticket.titulo}`,
             tipo: 'Ticket',
@@ -99,7 +97,7 @@ export async function PUT(request, { params }) {
       if ((data.estado === 'Cerrado' || data.estado === 'Resuelto') && oldTicket.estado !== data.estado) {
         await prisma.notificacion.create({
           data: {
-            usuarioId: oldTicket.creadoPorId,
+            usuarioId: parseInt(oldTicket.creadoPorId),
             titulo: `Ticket ${data.estado === 'Cerrado' ? 'cerrado' : 'resuelto'}`,
             mensaje: `Tu ticket "${ticket.titulo}" ha sido marcado como ${data.estado === 'Cerrado' ? 'cerrado' : 'resuelto'}`,
             tipo: 'Ticket',

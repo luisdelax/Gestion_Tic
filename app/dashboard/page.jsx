@@ -24,7 +24,8 @@ import {
   CheckCircle,
   CheckSquare,
   XCircle,
-  AlertCircle
+  AlertCircle,
+  AlertOctagon
 } from 'lucide-react'
 import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend } from 'recharts'
 
@@ -52,7 +53,13 @@ export default function Dashboard() {
       const res = await fetch('/api/tareas', { credentials: 'include' })
       if (res.ok) {
         const data = await res.json()
-        setTareasRecientes(data.tareas.slice(0, 5))
+        const ordenPrioridad = { Urgente: 0, Alta: 1, Media: 2, Baja: 3 }
+        const estadosActivos = ['Pendiente', 'EnProceso']
+        const activas = data.tareas
+          .filter(t => estadosActivos.includes(t.estado))
+          .sort((a, b) => ordenPrioridad[a.prioridad] - ordenPrioridad[b.prioridad])
+          .slice(0, 5)
+        setTareasRecientes(activas)
         setTareasOverdue(data.overdueCount || 0)
       }
     } catch (error) {
@@ -374,7 +381,7 @@ export default function Dashboard() {
               <div className="flex items-center gap-3">
                 {tareasOverdue > 0 && (
                   <span className="px-3 py-1 bg-red-500/20 text-red-400 rounded-full text-sm flex items-center gap-1">
-                    <AlertTriangle size={14} />
+                    <AlertOctagon size={14} />
                     {tareasOverdue} vencida{tareasOverdue > 1 ? 's' : ''}
                   </span>
                 )}
@@ -398,7 +405,7 @@ export default function Dashboard() {
                       <span className={`px-2 py-0.5 rounded text-xs ${getPrioridadColor(tarea.prioridad)}`}>
                         {tarea.prioridad}
                       </span>
-                      {isOverdue(tarea) && <AlertTriangle size={14} className="text-red-400" />}
+                      {isOverdue(tarea) && <AlertOctagon size={14} className="text-red-400" />}
                     </div>
                     <h4 className="text-white text-sm font-medium mb-2 line-clamp-2">{tarea.titulo}</h4>
                     <div className="flex items-center justify-between">

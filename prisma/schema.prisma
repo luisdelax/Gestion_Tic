@@ -132,6 +132,8 @@ model Ubicacion {
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
   tickets     Ticket[]
+  equipos     EquipoComputo[]
+  equiposTelecom EquipoTelecom[]
 }
 
 model User {
@@ -180,11 +182,12 @@ model EquipoComputo {
   placa               String?       @unique
   procesador          String?
   ram                String?
-  unidadRam           UnidadAlmacenamiento?
   discoDuro          String?
   unidadDisco         UnidadAlmacenamiento?
   estado              EstadoEquipo  @default(Disponible)
   ubicacion           String?
+  ubicacionId         Int?
+  ubicacionObj        Ubicacion?    @relation(fields: [ubicacionId], references: [id])
   dependencia         String?
   fechaAdquisicion    DateTime?
   fechaGarantia       DateTime?
@@ -207,11 +210,15 @@ model EquipoTelecom {
   serial              String           @unique
   mac                 String?
   ip                  String?
+  placa               String?          @unique
   estado              EstadoEquipo     @default(Disponible)
   ubicacion           String?
+  ubicacionId         Int?
+  ubicacionObj        Ubicacion?       @relation(fields: [ubicacionId], references: [id])
   dependencia         String?
   fechaAdquisicion    DateTime?
   observaciones      String?
+  hojaVidaUrl         String?
   activo              Boolean          @default(true)
   createdAt           DateTime         @default(now())
   updatedAt           DateTime         @updatedAt

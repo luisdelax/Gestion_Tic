@@ -31,7 +31,7 @@ export async function GET(request) {
 
     const equipos = await prisma.equipoComputo.findMany({
       where,
-      include: { responsable: true },
+      include: { responsable: true, ubicacionObj: true },
       orderBy: { createdAt: 'desc' },
     })
 
@@ -84,11 +84,11 @@ export async function POST(request) {
         placa: data.placa || null,
         procesador: data.procesador || null,
         ram: data.ram || null,
-        unidadRam: data.unidadRam || null,
         discoDuro: data.discoDuro || null,
         unidadDisco: data.unidadDisco || null,
         estado: data.estado || 'Disponible',
         ubicacion: data.ubicacion,
+        ubicacionId: data.ubicacionId || null,
         dependencia: data.dependencia,
         fechaAdquisicion: data.fechaAdquisicion ? new Date(data.fechaAdquisicion) : null,
         fechaGarantia: data.fechaGarantia ? new Date(data.fechaGarantia) : null,
