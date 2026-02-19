@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import CRUDBase, { Button, Modal } from '@/components/CRUDBase'
-import { ArrowLeft, Save, FileSpreadsheet, FilePdf, Search, Monitor, Keyboard, Mouse, Cpu, Eye, X, Printer } from 'lucide-react'
+import { ArrowLeft, Save, FileSpreadsheet, FileText, Search, Monitor, Keyboard, Mouse, Cpu, Eye, X, File } from 'lucide-react'
 import { generarHojaVidaExcel, generarHojaVidaPDF } from '@/lib/exportExcel'
 import HojaVidaPreview from './HojaVidaPreview'
 
@@ -279,7 +279,7 @@ export default function HojaVidaForm({ onBack }) {
           disabled={loading}
           className="flex items-center gap-2"
         >
-          <FilePdf size={18} />
+          <FileText size={18} />
           {loading ? 'Generando...' : 'Exportar PDF'}
         </Button>
         <Button 
@@ -324,7 +324,7 @@ export default function HojaVidaForm({ onBack }) {
             Cerrar
           </Button>
           <Button onClick={handleExportPDF} className="flex items-center gap-2">
-            <FilePdf size={18} />
+            <FileText size={18} />
             Exportar PDF
           </Button>
           <Button onClick={handleExportExcel} className="flex items-center gap-2">
