@@ -13,6 +13,58 @@ const tiposUbicacion = [
   { value: 'Aula', label: 'Aula', icon: School },
 ]
 
+function ModalContent({ nombre, descripcion, formData, setFormData, editData, handleSubmit }) {
+  return (
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <Input label="Nombre" {...nombre} required placeholder="Nombre de la ubicación" />
+      
+      <div>
+        <label className="block mb-2 text-sm font-medium text-green-300/90">Tipo</label>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          {tiposUbicacion.map((t) => (
+            <button
+              key={t.value}
+              type="button"
+              onClick={() => setFormData({...formData, tipo: t.value})}
+              className={`p-3 rounded-lg border text-center transition-all ${
+                formData.tipo === t.value 
+                  ? 'bg-green-500/20 border-green-500/50 text-green-400' 
+                  : 'bg-slate-800/50 border-green-500/20 text-slate-400 hover:border-green-500/30'
+              }`}
+            >
+              <t.icon size={20} className="mx-auto mb-1" />
+              <span className="text-sm">{t.label}</span>
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <Input label="Descripción" {...descripcion} placeholder="Descripción opcional" />
+
+      {editData && (
+        <label className="flex items-center gap-2 cursor-pointer">
+          <input
+            type="checkbox"
+            checked={formData.activo}
+            onChange={(e) => setFormData({...formData, activo: e.target.checked})}
+            className="w-4 h-4 rounded border-green-500/30 bg-slate-800 text-green-500 focus:ring-green-500/50"
+          />
+          <span className="text-sm text-green-300/90">Activo</span>
+        </label>
+      )}
+
+      <div className="flex gap-3 pt-4">
+        <Button type="submit" className="flex-1">
+          {editData ? 'Actualizar' : 'Crear'}
+        </Button>
+        <Button type="button" variant="secondary" onClick={() => setFormData({ tipo: 'Ambiente', activo: true })}>
+          Cancelar
+        </Button>
+      </div>
+    </form>
+  )
+}
+
 export default function UbicacionesPage() {
   const [ubicaciones, setUbicaciones] = useState([])
   const [loading, setLoading] = useState(true)
@@ -136,56 +188,6 @@ export default function UbicacionesPage() {
     },
   ]
 
-  const ModalContent = () => (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      <Input label="Nombre" {...nombre} required placeholder="Nombre de la ubicación" />
-      
-      <div>
-        <label className="block mb-2 text-sm font-medium text-green-300/90">Tipo</label>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          {tiposUbicacion.map((t) => (
-            <button
-              key={t.value}
-              type="button"
-              onClick={() => setFormData({...formData, tipo: t.value})}
-              className={`p-3 rounded-lg border text-center transition-all ${
-                formData.tipo === t.value 
-                  ? 'bg-green-500/20 border-green-500/50 text-green-400' 
-                  : 'bg-slate-800/50 border-green-500/20 text-slate-400 hover:border-green-500/30'
-              }`}
-            >
-              <t.icon size={20} className="mx-auto mb-1" />
-              <span className="text-sm">{t.label}</span>
-            </button>
-          ))}
-        </div>
-      </div>
-
-      <Input label="Descripción" {...descripcion} placeholder="Descripción opcional" />
-
-      {editData && (
-        <label className="flex items-center gap-2 cursor-pointer">
-          <input
-            type="checkbox"
-            checked={formData.activo}
-            onChange={(e) => setFormData({...formData, activo: e.target.checked})}
-            className="w-4 h-4 rounded border-green-500/30 bg-slate-800 text-green-500 focus:ring-green-500/50"
-          />
-          <span className="text-sm text-green-300/90">Activo</span>
-        </label>
-      )}
-
-      <div className="flex gap-3 pt-4">
-        <Button type="submit" className="flex-1">
-          {editData ? 'Actualizar' : 'Crear'}
-        </Button>
-        <Button type="button" variant="secondary" onClick={() => setModalOpen(false)}>
-          Cancelar
-        </Button>
-      </div>
-    </form>
-  )
-
   return (
     <CRUDBase title="Ubicaciones" subtitle="Gestión de ambientes, oficinas, bibliotecas y aulas">
       <div className="mb-6 flex justify-end">
@@ -203,7 +205,14 @@ export default function UbicacionesPage() {
         searchFields={['nombre', 'tipo', 'descripcion']}
       />
       <Modal isOpen={modalOpen} onClose={() => setModalOpen(false)} title={editData ? 'Editar Ubicación' : 'Nueva Ubicación'}>
-        <ModalContent />
+        <ModalContent 
+          nombre={nombre} 
+          descripcion={descripcion} 
+          formData={formData} 
+          setFormData={setFormData} 
+          editData={editData}
+          handleSubmit={handleSubmit}
+        />
       </Modal>
     </CRUDBase>
   )
