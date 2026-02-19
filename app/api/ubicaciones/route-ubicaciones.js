@@ -63,6 +63,7 @@ export async function POST(request) {
         nombre: data.nombre,
         tipo: data.tipo,
         descripcion: data.descripcion || null,
+        activo: true,
       },
     })
 

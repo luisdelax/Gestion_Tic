@@ -109,6 +109,7 @@ enum TipoEvidencia {
 }
 
 enum TipoUbicacion {
+  IDF
   Centro
   Ambiente
   Oficina

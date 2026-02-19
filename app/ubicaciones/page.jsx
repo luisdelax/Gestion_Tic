@@ -2,9 +2,10 @@
 
 import { useState, useEffect } from 'react'
 import CRUDBase, { DataTable, Modal, Button, Input, useUpperCase } from '@/components/CRUDBase'
-import { Plus, Warehouse, Store, School, Home } from 'lucide-react'
+import { Plus, Warehouse, Store, School, Home, Building } from 'lucide-react'
 
 const tiposUbicacion = [
+  { value: 'IDF', label: 'IDF', icon: Building },
   { value: 'Centro', label: 'Centro', icon: Home },
   { value: 'Ambiente', label: 'Ambiente', icon: Home },
   { value: 'Oficina', label: 'Oficina', icon: Warehouse },
