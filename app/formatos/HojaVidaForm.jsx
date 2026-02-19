@@ -1,9 +1,10 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import CRUDBase, { Button, Input, Modal } from '@/components/CRUDBase'
-import { ArrowLeft, Save, FileSpreadsheet, Search, Monitor, Keyboard, Mouse, Cpu } from 'lucide-react'
-import { generarHojaVidaExcel } from '@/lib/exportExcel'
+import CRUDBase, { Button, Modal } from '@/components/CRUDBase'
+import { ArrowLeft, Save, FileSpreadsheet, FilePdf, Search, Monitor, Keyboard, Mouse, Cpu, Eye, X, Printer } from 'lucide-react'
+import { generarHojaVidaExcel, generarHojaVidaPDF } from '@/lib/exportExcel'
+import HojaVidaPreview from './HojaVidaPreview'
 
 export default function HojaVidaForm({ onBack }) {
   const [loading, setLoading] = useState(false)
@@ -12,6 +13,9 @@ export default function HojaVidaForm({ onBack }) {
   const [equipoSeleccionado, setEquipoSeleccionado] = useState(null)
   const [busqueda, setBusqueda] = useState('')
   const [showModal, setShowModal] = useState(false)
+  const [showPreview, setShowPreview] = useState(false)
+  const [errors, setErrors] = useState({})
+  
   const [formData, setFormData] = useState({
     area: '',
     inventario: '',
@@ -39,6 +43,16 @@ export default function HojaVidaForm({ onBack }) {
     mousePlaca: '',
   })
 
+  const validateForm = () => {
+    const newErrors = {}
+    if (!formData.inventario.trim()) newErrors.inventario = 'Nº Inventario es requerido'
+    if (!formData.marca.trim()) newErrors.marca = 'Marca es requerido'
+    if (!formData.modelo.trim()) newErrors.modelo = 'Modelo es requerido'
+    if (!formData.serialCpu.trim()) newErrors.serialCpu = 'Serial CPU es requerido'
+    setErrors(newErrors)
+    return Object.keys(newErrors).length === 0
+  }
+
   const searchEquipos = async () => {
     if (!busqueda.trim()) return
     setBuscando(true)
@@ -60,7 +74,7 @@ export default function HojaVidaForm({ onBack }) {
     setEquipoSeleccionado(equipo)
     setFormData({
       ...formData,
-      area: equipo.ubicacion?.nombre || '',
+      area: equipo.ubicacionObj?.nombre || '',
       inventario: equipo.placa || '',
       marca: equipo.marca || '',
       modelo: equipo.modelo || '',
@@ -71,35 +85,75 @@ export default function HojaVidaForm({ onBack }) {
       tipoEquipo: equipo.tipo || '',
       nombreEquipo: '',
       enRed: '',
-      direccionIp: equipo.ip || '',
+      direccionIp: equipo.mac || '',
       mac: equipo.mac || '',
       sistemaOperativo: '',
     })
     setShowModal(false)
   }
 
-  const handleExport = async () => {
+  const handleExportExcel = async () => {
+    if (!validateForm()) {
+      alert('Por favor complete los campos obligatorios')
+      return
+    }
     setLoading(true)
     try {
       await generarHojaVidaExcel(formData)
     } catch (error) {
       console.error('Error:', error)
-      alert('Error al generar el archivo')
+      alert('Error al generar el archivo Excel')
     } finally {
       setLoading(false)
     }
   }
 
-  const InputField = ({ label, value, field, icon: Icon, ...props }) => (
+  const handleExportPDF = async () => {
+    if (!validateForm()) {
+      alert('Por favor complete los campos obligatorios')
+      return
+    }
+    setLoading(true)
+    try {
+      await generarHojaVidaPDF(formData)
+    } catch (error) {
+      console.error('Error:', error)
+      alert('Error al generar el archivo PDF')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handlePreview = () => {
+    if (!validateForm()) {
+      alert('Por favor complete los campos obligatorios')
+      return
+    }
+    setShowPreview(true)
+  }
+
+  const InputField = ({ label, value, field, required, icon: Icon, ...props }) => (
     <div>
-      <label className="block mb-1 text-sm font-medium text-green-300/90">{label}</label>
+      <label className="block mb-1 text-sm font-medium text-green-300/90">
+        {label} {required && <span className="text-red-400">*</span>}
+      </label>
       <input
         type="text"
         value={value}
-        onChange={(e) => setFormData({ ...formData, [field]: e.target.value.toUpperCase() })}
-        className="w-full px-3 py-2 bg-slate-800/50 border border-green-500/30 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-green-400/50 uppercase"
+        onChange={(e) => {
+          setFormData({ ...formData, [field]: e.target.value.toUpperCase() })
+          if (errors[field]) {
+            setErrors({ ...errors, [field]: null })
+          }
+        }}
+        className={`w-full px-3 py-2 bg-slate-800/50 border rounded-lg text-white text-sm focus:outline-none focus:ring-2 uppercase ${
+          errors[field] 
+            ? 'border-red-500 focus:ring-red-400/50' 
+            : 'border-green-500/30 focus:ring-green-400/50'
+        }`}
         {...props}
       />
+      {errors[field] && <p className="text-red-400 text-xs mt-1">{errors[field]}</p>}
     </div>
   )
 
@@ -147,10 +201,10 @@ export default function HojaVidaForm({ onBack }) {
         </div>
 
         <InputField label="Área" value={formData.area} field="area" />
-        <InputField label="Nº Inventario" value={formData.inventario} field="inventario" />
-        <InputField label="Marca" value={formData.marca} field="marca" />
-        <InputField label="Modelo" value={formData.modelo} field="modelo" />
-        <InputField label="Serial CPU" value={formData.serialCpu} field="serialCpu" />
+        <InputField label="Nº Inventario" value={formData.inventario} field="inventario" required />
+        <InputField label="Marca" value={formData.marca} field="marca" required />
+        <InputField label="Modelo" value={formData.modelo} field="modelo" required />
+        <InputField label="Serial CPU" value={formData.serialCpu} field="serialCpu" required />
         <InputField label="Procesador" value={formData.procesador} field="procesador" />
         <InputField label="Velocidad" value={formData.velocidad} field="velocidad" />
         <InputField label="Memoria RAM" value={formData.memoriaRam} field="memoriaRam" />
@@ -211,9 +265,25 @@ export default function HojaVidaForm({ onBack }) {
         <InputField label="Placa Mouse" value={formData.mousePlaca} field="mousePlaca" />
       </div>
 
-      <div className="mt-8 flex justify-end gap-4">
+      <div className="mt-8 flex flex-wrap justify-end gap-4">
         <Button 
-          onClick={handleExport} 
+          variant="secondary"
+          onClick={handlePreview}
+          className="flex items-center gap-2"
+        >
+          <Eye size={18} />
+          Vista Previa
+        </Button>
+        <Button 
+          onClick={handleExportPDF}
+          disabled={loading}
+          className="flex items-center gap-2"
+        >
+          <FilePdf size={18} />
+          {loading ? 'Generando...' : 'Exportar PDF'}
+        </Button>
+        <Button 
+          onClick={handleExportExcel}
           disabled={loading}
           className="flex items-center gap-2"
         >
@@ -244,6 +314,23 @@ export default function HojaVidaForm({ onBack }) {
               ))}
             </div>
           )}
+        </div>
+      </Modal>
+
+      <Modal isOpen={showPreview} onClose={() => setShowPreview(false)} title="Vista Previa - Hoja de Vida" size="xl">
+        <HojaVidaPreview data={formData} />
+        <div className="mt-6 flex justify-end gap-4">
+          <Button variant="secondary" onClick={() => setShowPreview(false)}>
+            Cerrar
+          </Button>
+          <Button onClick={handleExportPDF} className="flex items-center gap-2">
+            <FilePdf size={18} />
+            Exportar PDF
+          </Button>
+          <Button onClick={handleExportExcel} className="flex items-center gap-2">
+            <FileSpreadsheet size={18} />
+            Exportar Excel
+          </Button>
         </div>
       </Modal>
     </CRUDBase>
