@@ -27,7 +27,7 @@ export async function GET(request) {
 
     const where = {}
     if (tipo) where.tipo = tipo
-    if (activo !== null) where.activo = activo === 'true'
+    if (activo !== null && activo !== undefined) where.activo = activo === 'true'
 
     const ubicaciones = await prisma.ubicacion.findMany({
       where,

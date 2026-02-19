@@ -13,7 +13,7 @@ const tiposUbicacion = [
   { value: 'Aula', label: 'Aula', icon: School },
 ]
 
-function ModalContent({ nombre, descripcion, formData, setFormData, editData, handleSubmit }) {
+function ModalContent({ nombre, descripcion, formData, setFormData, editData, handleSubmit, onClose }) {
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <Input label="Nombre" {...nombre} required placeholder="Nombre de la ubicación" />
@@ -57,7 +57,7 @@ function ModalContent({ nombre, descripcion, formData, setFormData, editData, ha
         <Button type="submit" className="flex-1">
           {editData ? 'Actualizar' : 'Crear'}
         </Button>
-        <Button type="button" variant="secondary" onClick={() => setFormData({ tipo: 'Ambiente', activo: true })}>
+        <Button type="button" variant="secondary" onClick={onClose}>
           Cancelar
         </Button>
       </div>
@@ -212,6 +212,7 @@ export default function UbicacionesPage() {
           setFormData={setFormData} 
           editData={editData}
           handleSubmit={handleSubmit}
+          onClose={() => setModalOpen(false)}
         />
       </Modal>
     </CRUDBase>
