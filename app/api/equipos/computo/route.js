@@ -24,10 +24,19 @@ export async function GET(request) {
     const { searchParams } = new URL(request.url)
     const estado = searchParams.get('estado')
     const tipo = searchParams.get('tipo')
+    const search = searchParams.get('search')
 
     const where = {}
     if (estado) where.estado = estado
     if (tipo) where.tipo = tipo
+    if (search) {
+      where.OR = [
+        { placa: { contains: search, mode: 'insensitive' } },
+        { serial: { contains: search, mode: 'insensitive' } },
+        { marca: { contains: search, mode: 'insensitive' } },
+        { modelo: { contains: search, mode: 'insensitive' } },
+      ]
+    }
 
     const equipos = await prisma.equipoComputo.findMany({
       where,

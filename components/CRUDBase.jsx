@@ -107,6 +107,7 @@ export default function CRUDBase({ children, title, subtitle }) {
     { icon: MapPin, label: 'Ubicaciones', href: '/ubicaciones' },
     { icon: Warehouse, label: 'Préstamos', href: '/prestamos' },
     { icon: Calendar, label: 'Auditorio', href: '/auditorio' },
+    { icon: FileText, label: 'Formatos', href: '/formatos' },
     { icon: FileText, label: 'Informes', href: '/informes' },
     { icon: UserCog, label: 'Usuarios', href: '/usuarios' },
     { icon: Settings, label: 'Configuración', href: '/configuracion' },
@@ -299,16 +300,19 @@ export default function CRUDBase({ children, title, subtitle }) {
   )
 }
 
-export function DataTable({ columns, data, onEdit, onDelete, onView, searchFields = [] }) {
+export function DataTable({ columns, data, onEdit, onDelete, onView, searchFields = [], searchFn = null }) {
   const [search, setSearch] = useState('')
 
   const filteredData = searchFields.length > 0 && search
-    ? data.filter(row => 
-        searchFields.some(field => {
+    ? data.filter(row => {
+        if (searchFn) {
+          return searchFn(row, search)
+        }
+        return searchFields.some(field => {
           const value = row[field]
           return value && String(value).toLowerCase().includes(search.toLowerCase())
         })
-      )
+      })
     : data
 
   return (
