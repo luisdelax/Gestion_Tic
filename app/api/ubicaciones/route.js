@@ -14,34 +14,30 @@ async function verifyAuth(request) {
   }
 }
 
-export async function GET(request) {
+export async function GET(request, { params }) {
+  const { id } = await params
   try {
     const user = await verifyAuth(request)
     if (!user) {
       return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
     }
 
-    const { searchParams } = new URL(request.url)
-    const tipo = searchParams.get('tipo')
-    const activo = searchParams.get('activo')
-
-    const where = {}
-    if (tipo) where.tipo = tipo
-    if (activo !== null) where.activo = activo === 'true'
-
-    const ubicaciones = await prisma.ubicacion.findMany({
-      where,
-      orderBy: { createdAt: 'desc' },
+    const ubicacion = await prisma.ubicacion.findUnique({
+      where: { id: parseInt(id) },
     })
 
-    return NextResponse.json(ubicaciones)
+    if (!ubicacion) {
+      return NextResponse.json({ error: 'No encontrado' }, { status: 404 })
+    }
+
+    return NextResponse.json(ubicacion)
   } catch (error) {
-    console.error('Error:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }
 
-export async function POST(request) {
+export async function PUT(request, { params }) {
+  const { id } = await params
   try {
     const user = await verifyAuth(request)
     if (!user) {
@@ -49,26 +45,47 @@ export async function POST(request) {
     }
 
     if (user.rol !== 'Administrador') {
-      return NextResponse.json({ error: 'Solo administradores pueden crear ubicaciones' }, { status: 403 })
+      return NextResponse.json({ error: 'Solo administradores pueden modificar ubicaciones' }, { status: 403 })
     }
 
     const data = await request.json()
 
-    if (!data.nombre || !data.tipo) {
-      return NextResponse.json({ error: 'Nombre y tipo son requeridos' }, { status: 400 })
-    }
-
-    const ubicacion = await prisma.ubicacion.create({
+    const ubicacion = await prisma.ubicacion.update({
+      where: { id: parseInt(id) },
       data: {
         nombre: data.nombre,
         tipo: data.tipo,
         descripcion: data.descripcion || null,
+        activo: Boolean(data.activo),
       },
     })
 
     return NextResponse.json(ubicacion)
   } catch (error) {
     console.error('Error:', error)
+    return NextResponse.json({ error: 'Error interno' }, { status: 500 })
+  }
+}
+
+export async function DELETE(request, { params }) {
+  const { id } = await params
+  try {
+    const user = await verifyAuth(request)
+    if (!user || user.rol !== 'Administrador') {
+      return NextResponse.json({ error: 'Solo administradores pueden eliminar ubicaciones' }, { status: 403 })
+    }
+
+    const existing = await prisma.ubicacion.findUnique({ where: { id: parseInt(id) } })
+    if (!existing) {
+      return NextResponse.json({ error: 'Ubicación no encontrada' }, { status: 404 })
+    }
+
+    await prisma.ubicacion.delete({
+      where: { id: parseInt(id) },
+    })
+
+    return NextResponse.json({ success: true })
+  } catch (error) {
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }

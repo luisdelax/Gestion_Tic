@@ -360,6 +360,38 @@ model Notificacion {
   createdAt     DateTime         @default(now())
 }
 
+model HojaVidaEquipos {
+  id                Int              @id @default(autoincrement())
+  responsable       String
+  area              String?
+  inventario        String?
+  marca             String?
+  modelo            String?
+  serialCpu         String?
+  cpu               String?
+  procesador        String?
+  velocidad         String?
+  memoriaRam        String?
+  discoDuro         String?
+  tipoEquipo        String?
+  nombreEquipo      String?
+  enRed             String?
+  direccionIp       String?
+  mac               String?
+  sistemaOperativo  String?
+  monitorMarca     String?
+  monitorSerial    String?
+  monitorPlaca     String?
+  tecladoMarca      String?
+  tecladoSerial    String?
+  tecladoPlaca     String?
+  mouseMarca        String?
+  mouseSerial      String?
+  mousePlaca       String?
+  createdAt         DateTime         @default(now())
+  updatedAt         DateTime         @updatedAt
+}
+
 model Tarea {
   id            Int              @id @default(autoincrement())
   titulo        String

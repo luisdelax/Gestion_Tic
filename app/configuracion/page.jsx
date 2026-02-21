@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { motion } from 'framer-motion'
+import { motion, AnimatePresence } from 'framer-motion'
 import { 
   LayoutDashboard, 
   Users, 
@@ -16,8 +16,8 @@ import {
   Bell,
   Search,
   Menu,
+  X,
   Monitor,
-  Speaker,
   HardDrive,
   UserCog,
   User,
@@ -28,7 +28,8 @@ import {
   CheckCircle,
   CheckSquare,
   XCircle,
-  RefreshCw
+  RefreshCw,
+  MapPin
 } from 'lucide-react'
 import { useUpperCase } from '@/components/CRUDBase'
 
@@ -36,6 +37,7 @@ export default function Configuracion() {
   const [user, setUser] = useState(null)
   const [loading, setLoading] = useState(true)
   const [sidebarOpen, setSidebarOpen] = useState(true)
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [activePath, setActivePath] = useState('/configuracion')
   const [activeTab, setActiveTab] = useState('perfil')
   const [saving, setSaving] = useState(false)
@@ -149,6 +151,7 @@ export default function Configuracion() {
     { icon: Monitor, label: 'Audiovisuales', href: '/audiovisuales', roles: ['Administrador', 'Superusuario', 'TecnicoN1'] },
     { icon: Ticket, label: 'Tickets', href: '/tickets', roles: ['Administrador', 'Superusuario', 'TecnicoN1'] },
     { icon: CheckSquare, label: 'Tareas', href: '/tareas', roles: ['Administrador', 'Superusuario', 'TecnicoN1'] },
+    { icon: MapPin, label: 'Ubicaciones', href: '/ubicaciones', roles: ['Administrador', 'Superusuario'] },
     { icon: Warehouse, label: 'Préstamos', href: '/prestamos', roles: ['Administrador', 'Superusuario'] },
     { icon: Calendar, label: 'Auditorio', href: '/auditorio', roles: ['Administrador', 'Superusuario'] },
     { icon: UserCog, label: 'Usuarios', href: '/usuarios', roles: ['Administrador'] },
@@ -232,7 +235,7 @@ export default function Configuracion() {
 
   const tabs = [
     { id: 'perfil', label: 'Perfil', icon: User },
-    { id: 'password', label: 'Cambiar Contraseña', icon: Lock },
+    { id: 'password', label: 'Contraseña', icon: Lock },
   ]
 
   if (loading) {
@@ -249,10 +252,153 @@ export default function Configuracion() {
 
   return (
     <div className="min-h-screen bg-slate-900 flex">
+      {/* Mobile Header */}
+      <header className="lg:hidden fixed top-0 left-0 right-0 h-14 bg-slate-950 border-b border-green-500/20 flex items-center justify-between px-4 z-40">
+        <button 
+          onClick={() => setMobileMenuOpen(true)}
+          className="p-2 rounded-lg hover:bg-slate-800 text-green-400"
+        >
+          <Menu size={24} />
+        </button>
+        <h1 className="font-bold text-green-400 text-lg">Dinamiz TIC</h1>
+        <button 
+          onClick={() => setShowNotif(!showNotif)}
+          className="p-2 rounded-lg hover:bg-slate-800 text-green-400 relative"
+        >
+          <Bell size={20} />
+          {notifSinLeer > 0 && (
+            <span className="absolute top-0 right-0 w-4 h-4 bg-red-500 rounded-full text-white text-[10px] flex items-center justify-center">
+              {notifSinLeer > 9 ? '9+' : notifSinLeer}
+            </span>
+          )}
+        </button>
+      </header>
+
+      {/* Mobile Menu Overlay */}
+      <AnimatePresence>
+        {mobileMenuOpen && (
+          <>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setMobileMenuOpen(false)}
+              className="lg:hidden fixed inset-0 bg-black/60 z-50"
+            />
+            <motion.div
+              initial={{ x: -280 }}
+              animate={{ x: 0 }}
+              exit={{ x: -280 }}
+              transition={{ type: 'tween', duration: 0.3 }}
+              className="lg:hidden fixed top-0 left-0 bottom-0 w-[280px] bg-slate-950 border-r border-green-500/20 z-50 flex flex-col"
+            >
+              <div className="p-4 border-b border-green-500/20 flex items-center justify-between">
+                <h1 className="font-bold text-green-400 text-xl">Dinamiz TIC</h1>
+                <button 
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="p-2 rounded-lg hover:bg-slate-800 text-slate-400"
+                >
+                  <X size={24} />
+                </button>
+              </div>
+              <nav className="flex-1 p-3 space-y-1 overflow-y-auto">
+                {menuItems.map((item) => (
+                  <a
+                    key={item.href}
+                    href={item.href}
+                    onClick={() => setMobileMenuOpen(false)}
+                    className={`w-full flex items-center gap-3 px-3 py-3 rounded-lg transition-all ${
+                      activePath === item.href
+                        ? 'bg-green-500/20 text-green-400 border border-green-500/30' 
+                        : 'text-slate-400 hover:bg-slate-800 hover:text-green-300'
+                    }`}
+                  >
+                    <item.icon size={20} />
+                    <span className="text-sm font-medium">{item.label}</span>
+                  </a>
+                ))}
+              </nav>
+              <div className="p-3 border-t border-green-500/20">
+                <button 
+                  onClick={handleLogout}
+                  className="w-full flex items-center gap-3 px-3 py-3 rounded-lg text-red-400 hover:bg-red-500/10 transition-all"
+                >
+                  <LogOut size={20} />
+                  <span className="text-sm font-medium">Cerrar Sesión</span>
+                </button>
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+
+      {/* Mobile Notifications */}
+      <AnimatePresence>
+        {showNotif && (
+          <>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setShowNotif(false)}
+              className="lg:hidden fixed inset-0 bg-black/40 z-40"
+            />
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              className="lg:hidden fixed top-16 right-2 left-2 bg-slate-900 border border-green-500/30 rounded-xl shadow-xl z-50 overflow-hidden max-h-[60vh]"
+            >
+              <div className="p-3 border-b border-green-500/20 flex items-center justify-between">
+                <h3 className="text-white font-medium">Notificaciones</h3>
+                {notifSinLeer > 0 && (
+                  <button 
+                    onClick={marcarTodasLeidas}
+                    className="text-xs text-green-400 hover:text-green-300"
+                  >
+                    Marcar todo leído
+                  </button>
+                )}
+              </div>
+              <div className="max-h-48 overflow-y-auto">
+                {notificaciones.length > 0 ? (
+                  notificaciones.slice(0, 10).map((notif) => (
+                    <div 
+                      key={notif.id}
+                      onClick={() => { if (!notif.leida) marcarLeida(notif.id); setShowNotif(false) }}
+                      className={`p-3 border-b border-green-500/10 cursor-pointer hover:bg-slate-800/50 ${
+                        !notif.leida ? 'bg-green-500/5' : ''
+                      }`}
+                    >
+                      <div className="flex items-start gap-2">
+                        {!notif.leida && (
+                          <span className="w-2 h-2 bg-green-400 rounded-full mt-1.5 flex-shrink-0"></span>
+                        )}
+                        <div className="flex-1">
+                          <p className={`text-sm ${notif.leida ? 'text-slate-400' : 'text-white'}`}>
+                            {notif.titulo}
+                          </p>
+                          <p className="text-xs text-slate-500 mt-0.5">{notif.mensaje}</p>
+                        </div>
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <div className="p-4 text-center text-slate-500 text-sm">
+                    Sin notificaciones
+                  </div>
+                )}
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+
+      {/* Desktop Sidebar */}
       <motion.aside
         initial={false}
         animate={{ width: sidebarOpen ? 260 : 80 }}
-        className="bg-slate-950 border-r border-green-500/20 flex flex-col"
+        className="hidden lg:flex bg-slate-950 border-r border-green-500/20 flex-col fixed h-full z-40"
       >
         <div className="p-4 border-b border-green-500/20">
           <h1 className={`font-bold text-green-400 transition-all ${sidebarOpen ? 'text-xl' : 'text-lg text-center'}`}>
@@ -260,10 +406,10 @@ export default function Configuracion() {
           </h1>
         </div>
 
-        <nav className="flex-1 p-3 space-y-1">
-          {menuItems.map((item, index) => (
+        <nav className="flex-1 p-3 space-y-1 overflow-y-auto">
+          {menuItems.map((item) => (
             <a
-              key={index}
+              key={item.href}
               href={item.href}
               className={`w-full flex items-center gap-3 px-3 py-3 rounded-lg transition-all ${
                 activePath === item.href
@@ -288,8 +434,10 @@ export default function Configuracion() {
         </div>
       </motion.aside>
 
-      <div className="flex-1 flex flex-col">
-        <header className="h-16 bg-slate-950/50 border-b border-green-500/20 flex items-center justify-between px-6">
+      {/* Main Content */}
+      <div className="lg:pl-[260px] flex-1 flex flex-col pt-14 lg:pt-0">
+        {/* Desktop Header */}
+        <header className="hidden lg:flex h-16 bg-slate-950/50 border-b border-green-500/20 items-center justify-between px-6">
           <div className="flex items-center gap-4">
             <button 
               onClick={() => setSidebarOpen(!sidebarOpen)}
@@ -302,7 +450,7 @@ export default function Configuracion() {
               <input
                 type="text"
                 placeholder="Buscar..."
-                className="pl-10 pr-4 py-2 bg-slate-800/50 border border-green-500/20 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-green-400/50"
+                className="pl-10 pr-4 py-2 bg-slate-800/50 border border-green-500/20 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-green-400/50 w-64"
               />
             </div>
           </div>
@@ -325,23 +473,14 @@ export default function Configuracion() {
                 <div className="absolute right-0 top-full mt-2 w-80 bg-slate-900 border border-green-500/30 rounded-xl shadow-xl z-50 overflow-hidden">
                   <div className="p-3 border-b border-green-500/20 flex items-center justify-between">
                     <h3 className="text-white font-medium">Notificaciones</h3>
-                    <div className="flex items-center gap-2">
+                    {notifSinLeer > 0 && (
                       <button 
-                        onClick={fetchNotificaciones}
-                        className="p-1 hover:bg-slate-700 rounded-lg transition-colors"
-                        title="Actualizar"
+                        onClick={marcarTodasLeidas}
+                        className="text-xs text-green-400 hover:text-green-300"
                       >
-                        <RefreshCw size={14} className="text-green-400" />
+                        Marcar todo leído
                       </button>
-                      {notifSinLeer > 0 && (
-                        <button 
-                          onClick={marcarTodasLeidas}
-                          className="text-xs text-green-400 hover:text-green-300"
-                        >
-                          Marcar todo leído
-                        </button>
-                      )}
-                    </div>
+                    )}
                   </div>
                   <div className="max-h-80 overflow-y-auto">
                     {notificaciones.length > 0 ? (
@@ -349,7 +488,7 @@ export default function Configuracion() {
                         <div 
                           key={notif.id}
                           onClick={() => { if (!notif.leida) marcarLeida(notif.id) }}
-                          className={`p-3 border-b border-green-500/10 cursor-pointer hover:bg-slate-800/50 transition-colors ${
+                          className={`p-3 border-b border-green-500/10 cursor-pointer hover:bg-slate-800/50 ${
                             !notif.leida ? 'bg-green-500/5' : ''
                           }`}
                         >
@@ -392,91 +531,92 @@ export default function Configuracion() {
           </div>
         </header>
 
-        <main className="flex-1 p-6">
+        <main className="flex-1 p-3 md:p-4 lg:p-6 pb-20 lg:pb-6">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="mb-6"
+            className="mb-4 lg:mb-6"
           >
-            <h2 className="text-2xl font-bold text-white">Configuración</h2>
-            <p className="text-green-400/70">Administra tu perfil y preferencias</p>
+            <h2 className="text-lg lg:text-2xl font-bold text-white">Configuración</h2>
+            <p className="text-green-400/70 text-sm">Administra tu perfil y preferencias</p>
           </motion.div>
 
           <div className="bg-slate-800/50 border border-green-500/20 rounded-xl">
-            <div className="border-b border-green-500/20">
-              <div className="flex gap-2 p-2">
+            {/* Tabs - Scrollable on mobile */}
+            <div className="border-b border-green-500/20 overflow-x-auto">
+              <div className="flex gap-1 lg:gap-2 p-2 min-w-max">
                 {tabs.map((tab) => (
                   <button
                     key={tab.id}
                     onClick={() => { setActiveTab(tab.id); setMessage(null) }}
-                    className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                    className={`flex items-center gap-1.5 lg:gap-2 px-3 lg:px-4 py-2 rounded-lg text-xs lg:text-sm font-medium transition-all whitespace-nowrap ${
                       activeTab === tab.id
                         ? 'bg-green-500/20 text-green-400 border border-green-500/30'
                         : 'text-slate-400 hover:bg-slate-700 hover:text-green-300'
                     }`}
                   >
-                    <tab.icon size={16} />
+                    <tab.icon size={14} className="w-3.5 h-3.5 lg:w-4 lg:h-4" />
                     {tab.label}
                   </button>
                 ))}
               </div>
             </div>
 
-            <div className="p-6">
+            <div className="p-3 lg:p-6">
               {message && (
-                <div className={`mb-4 p-3 rounded-lg flex items-center gap-2 ${
+                <div className={`mb-4 p-3 rounded-lg flex items-center gap-2 text-sm ${
                   message.type === 'success' 
                     ? 'bg-green-500/20 text-green-400 border border-green-500/30' 
                     : 'bg-red-500/20 text-red-400 border border-red-500/30'
                 }`}>
-                  {message.type === 'success' ? <CheckCircle size={18} /> : <XCircle size={18} />}
+                  {message.type === 'success' ? <CheckCircle size={16} /> : <XCircle size={16} />}
                   {message.text}
                 </div>
               )}
 
               {activeTab === 'perfil' && (
                 <form onSubmit={handleProfileUpdate} className="max-w-md space-y-4">
-                  <div className="flex items-center gap-4 mb-6">
-                    <div className="w-20 h-20 rounded-full bg-green-500/20 border border-green-500/30 flex items-center justify-center">
-                      <span className="text-green-400 text-2xl font-bold">
+                  <div className="flex items-center gap-3 lg:gap-4 mb-4 lg:mb-6">
+                    <div className="w-14 h-14 lg:w-20 lg:h-20 rounded-full bg-green-500/20 border border-green-500/30 flex items-center justify-center">
+                      <span className="text-green-400 text-xl lg:text-2xl font-bold">
                         {user?.nombre?.[0]}{user?.apellido?.[0]}
                       </span>
                     </div>
                     <div>
-                      <p className="text-white font-medium">{user?.nombre} {user?.apellido}</p>
-                      <p className="text-green-400/70 text-sm">{user?.rol}</p>
+                      <p className="text-white font-medium text-sm lg:text-base">{user?.nombre} {user?.apellido}</p>
+                      <p className="text-green-400/70 text-xs lg:text-sm">{user?.rol}</p>
                     </div>
                   </div>
 
                   <div>
-                    <label className="block mb-1.5 text-xs md:text-sm font-medium text-green-300/90">Nombre</label>
+                    <label className="block mb-1.5 text-xs lg:text-sm font-medium text-green-300/90">Nombre</label>
                     <input
                       type="text"
                       value={nombre.value}
                       onChange={nombre.onChange}
-                      className="w-full px-3 py-2.5 bg-slate-800/50 border border-green-500/30 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-green-400/50 uppercase"
+                      className="w-full px-3 py-2.5 bg-slate-800/50 border border-green-500/30 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-green-400/50 uppercase text-sm lg:text-base"
                       placeholder="NOMBRE"
                     />
                   </div>
 
                   <div>
-                    <label className="block mb-1.5 text-xs md:text-sm font-medium text-green-300/90">Apellido</label>
+                    <label className="block mb-1.5 text-xs lg:text-sm font-medium text-green-300/90">Apellido</label>
                     <input
                       type="text"
                       value={apellido.value}
                       onChange={apellido.onChange}
-                      className="w-full px-3 py-2.5 bg-slate-800/50 border border-green-500/30 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-green-400/50 uppercase"
+                      className="w-full px-3 py-2.5 bg-slate-800/50 border border-green-500/30 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-green-400/50 uppercase text-sm lg:text-base"
                       placeholder="APELLIDO"
                     />
                   </div>
 
                   <div>
-                    <label className="block mb-1.5 text-xs md:text-sm font-medium text-green-300/90">Email</label>
+                    <label className="block mb-1.5 text-xs lg:text-sm font-medium text-green-300/90">Email</label>
                     <input
                       type="email"
                       value={email.value}
                       onChange={(e) => email.setValue(e.target.value)}
-                      className="w-full px-3 py-2.5 bg-slate-800/50 border border-green-500/30 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-green-400/50"
+                      className="w-full px-3 py-2.5 bg-slate-800/50 border border-green-500/30 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-green-400/50 text-sm lg:text-base"
                       placeholder="email@ejemplo.com"
                     />
                   </div>
@@ -484,7 +624,7 @@ export default function Configuracion() {
                   <button
                     type="submit"
                     disabled={saving}
-                    className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-green-500 hover:bg-green-400 text-slate-900 font-medium rounded-lg transition-all disabled:opacity-50"
+                    className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-green-500 hover:bg-green-400 text-slate-900 font-medium rounded-lg transition-all disabled:opacity-50 text-sm lg:text-base"
                   >
                     {saving ? (
                       <>
@@ -493,7 +633,7 @@ export default function Configuracion() {
                       </>
                     ) : (
                       <>
-                        <Save size={18} />
+                        <Save size={18} className="w-4 h-4 lg:w-5 lg:h-5" />
                         Guardar Cambios
                       </>
                     )}
@@ -504,13 +644,13 @@ export default function Configuracion() {
               {activeTab === 'password' && (
                 <form onSubmit={handlePasswordChange} className="max-w-md space-y-4">
                   <div>
-                    <label className="block mb-1.5 text-xs md:text-sm font-medium text-green-300/90">Contraseña Actual</label>
+                    <label className="block mb-1.5 text-xs lg:text-sm font-medium text-green-300/90">Contraseña Actual</label>
                     <div className="relative">
                       <input
                         type={showPasswords.actual ? 'text' : 'password'}
                         value={passwordData.actual}
                         onChange={(e) => setPasswordData({...passwordData, actual: e.target.value})}
-                        className="w-full px-3 py-2.5 pr-10 bg-slate-800/50 border border-green-500/30 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-green-400/50"
+                        className="w-full px-3 py-2.5 pr-10 bg-slate-800/50 border border-green-500/30 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-green-400/50 text-sm lg:text-base"
                         placeholder="••••••••"
                         required
                       />
@@ -519,19 +659,19 @@ export default function Configuracion() {
                         onClick={() => setShowPasswords({...showPasswords, actual: !showPasswords.actual})}
                         className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-green-400"
                       >
-                        {showPasswords.actual ? <EyeOff size={18} /> : <Eye size={18} />}
+                        {showPasswords.actual ? <EyeOff size={18} className="w-4 h-4 lg:w-5 lg:h-5" /> : <Eye size={18} className="w-4 h-4 lg:w-5 lg:h-5" />}
                       </button>
                     </div>
                   </div>
 
                   <div>
-                    <label className="block mb-1.5 text-xs md:text-sm font-medium text-green-300/90">Nueva Contraseña</label>
+                    <label className="block mb-1.5 text-xs lg:text-sm font-medium text-green-300/90">Nueva Contraseña</label>
                     <div className="relative">
                       <input
                         type={showPasswords.nueva ? 'text' : 'password'}
                         value={passwordData.nueva}
                         onChange={(e) => setPasswordData({...passwordData, nueva: e.target.value})}
-                        className="w-full px-3 py-2.5 pr-10 bg-slate-800/50 border border-green-500/30 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-green-400/50"
+                        className="w-full px-3 py-2.5 pr-10 bg-slate-800/50 border border-green-500/30 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-green-400/50 text-sm lg:text-base"
                         placeholder="••••••••"
                         required
                       />
@@ -540,19 +680,19 @@ export default function Configuracion() {
                         onClick={() => setShowPasswords({...showPasswords, nueva: !showPasswords.nueva})}
                         className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-green-400"
                       >
-                        {showPasswords.nueva ? <EyeOff size={18} /> : <Eye size={18} />}
+                        {showPasswords.nueva ? <EyeOff size={18} className="w-4 h-4 lg:w-5 lg:h-5" /> : <Eye size={18} className="w-4 h-4 lg:w-5 lg:h-5" />}
                       </button>
                     </div>
                   </div>
 
                   <div>
-                    <label className="block mb-1.5 text-xs md:text-sm font-medium text-green-300/90">Confirmar Nueva Contraseña</label>
+                    <label className="block mb-1.5 text-xs lg:text-sm font-medium text-green-300/90">Confirmar Nueva Contraseña</label>
                     <div className="relative">
                       <input
                         type={showPasswords.confirmar ? 'text' : 'password'}
                         value={passwordData.confirmar}
                         onChange={(e) => setPasswordData({...passwordData, confirmar: e.target.value})}
-                        className="w-full px-3 py-2.5 pr-10 bg-slate-800/50 border border-green-500/30 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-green-400/50"
+                        className="w-full px-3 py-2.5 pr-10 bg-slate-800/50 border border-green-500/30 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-green-400/50 text-sm lg:text-base"
                         placeholder="••••••••"
                         required
                       />
@@ -561,7 +701,7 @@ export default function Configuracion() {
                         onClick={() => setShowPasswords({...showPasswords, confirmar: !showPasswords.confirmar})}
                         className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-green-400"
                       >
-                        {showPasswords.confirmar ? <EyeOff size={18} /> : <Eye size={18} />}
+                        {showPasswords.confirmar ? <EyeOff size={18} className="w-4 h-4 lg:w-5 lg:h-5" /> : <Eye size={18} className="w-4 h-4 lg:w-5 lg:h-5" />}
                       </button>
                     </div>
                   </div>
@@ -569,7 +709,7 @@ export default function Configuracion() {
                   <button
                     type="submit"
                     disabled={saving}
-                    className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-green-500 hover:bg-green-400 text-slate-900 font-medium rounded-lg transition-all disabled:opacity-50"
+                    className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-green-500 hover:bg-green-400 text-slate-900 font-medium rounded-lg transition-all disabled:opacity-50 text-sm lg:text-base"
                   >
                     {saving ? (
                       <>
@@ -578,7 +718,7 @@ export default function Configuracion() {
                       </>
                     ) : (
                       <>
-                        <Lock size={18} />
+                        <Lock size={18} className="w-4 h-4 lg:w-5 lg:h-5" />
                         Cambiar Contraseña
                       </>
                     )}
@@ -589,9 +729,31 @@ export default function Configuracion() {
           </div>
         </main>
 
-        <footer className="py-4 px-6 border-t border-green-500/20 bg-slate-950/30">
-          <p className="text-center text-slate-500 text-sm">
-            © 2024 Dinamiz TIC. Todos los derechos reservados a Luis E De La Cruz Fajardo
+        {/* Mobile Bottom Navigation */}
+        <nav className="fixed bottom-0 left-0 right-0 bg-slate-950/95 backdrop-blur-lg border-t border-green-500/20 lg:hidden z-50 safe-area-pb">
+          <div className="flex justify-around items-center h-14">
+            {menuItems.slice(0, 5).map((item) => {
+              const isActive = activePath === item.href
+              return (
+                <a
+                  key={item.href}
+                  href={item.href}
+                  className={`flex flex-col items-center justify-center p-1 ${
+                    isActive ? 'text-green-400' : 'text-slate-400'
+                  }`}
+                >
+                  <item.icon size={20} />
+                  <span className="text-[9px] mt-0.5 truncate max-w-[60px]">{item.label}</span>
+                </a>
+              )
+            })}
+          </div>
+        </nav>
+
+        {/* Desktop Footer */}
+        <footer className="hidden lg:block py-3 px-6 border-t border-green-500/20 bg-slate-950/30">
+          <p className="text-center text-slate-500 text-xs lg:text-sm">
+            © 2024 Dinamiz TIC
           </p>
         </footer>
       </div>

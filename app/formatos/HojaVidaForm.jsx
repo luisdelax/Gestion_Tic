@@ -6,6 +6,33 @@ import { ArrowLeft, Save, FileSpreadsheet, FileText, Search, Monitor, Keyboard, 
 import { generarHojaVidaExcel, generarHojaVidaPDF } from '@/lib/exportExcel'
 import HojaVidaPreview from './HojaVidaPreview'
 
+function InputField({ label, value, field, required, errors = {}, onChange }) {
+  const error = errors[field]
+  const handleChange = (e) => {
+    if (onChange) {
+      onChange(field, e.target.value)
+    }
+  }
+  return (
+    <div>
+      <label className="block mb-1 text-sm font-medium text-green-300/90">
+        {label} {required && <span className="text-red-400">*</span>}
+      </label>
+      <input
+        type="text"
+        value={value}
+        onChange={handleChange}
+        className={`w-full px-3 py-2 bg-slate-800/50 border rounded-lg text-white text-sm focus:outline-none focus:ring-2 uppercase ${
+          error 
+            ? 'border-red-500 focus:ring-red-400/50' 
+            : 'border-green-500/30 focus:ring-green-400/50'
+        }`}
+      />
+      {error && <p className="text-red-400 text-xs mt-1">{error}</p>}
+    </div>
+  )
+}
+
 export default function HojaVidaForm({ onBack }) {
   const [loading, setLoading] = useState(false)
   const [buscando, setBuscando] = useState(false)
@@ -14,14 +41,17 @@ export default function HojaVidaForm({ onBack }) {
   const [busqueda, setBusqueda] = useState('')
   const [showModal, setShowModal] = useState(false)
   const [showPreview, setShowPreview] = useState(false)
+  const [previewData, setPreviewData] = useState(null)
   const [errors, setErrors] = useState({})
   
   const [formData, setFormData] = useState({
+    responsable: '',
     area: '',
     inventario: '',
     marca: '',
     modelo: '',
     serialCpu: '',
+    cpu: '',
     procesador: '',
     velocidad: '',
     memoriaRam: '',
@@ -92,14 +122,72 @@ export default function HojaVidaForm({ onBack }) {
     setShowModal(false)
   }
 
+  const handleSaveToDatabase = async () => {
+    if (!validateForm()) {
+      alert('Por favor complete los campos obligatorios')
+      return
+    }
+    const dataToSave = previewData || formData
+    setLoading(true)
+    try {
+      const res = await fetch('/api/formatos', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify(dataToSave)
+      })
+      if (res.ok) {
+        alert('Hoja de vida guardada correctamente')
+        setPreviewData(null)
+        setFormData({
+          responsable: '',
+          area: '',
+          inventario: '',
+          marca: '',
+          modelo: '',
+          serialCpu: '',
+          cpu: '',
+          procesador: '',
+          velocidad: '',
+          memoriaRam: '',
+          discoDuro: '',
+          tipoEquipo: '',
+          nombreEquipo: '',
+          enRed: '',
+          direccionIp: '',
+          mac: '',
+          sistemaOperativo: '',
+          monitorMarca: '',
+          monitorSerial: '',
+          monitorPlaca: '',
+          tecladoMarca: '',
+          tecladoSerial: '',
+          tecladoPlaca: '',
+          mouseMarca: '',
+          mouseSerial: '',
+          mousePlaca: '',
+        })
+        setShowPreview(false)
+      } else {
+        alert('Error al guardar')
+      }
+    } catch (error) {
+      console.error('Error:', error)
+      alert('Error al guardar')
+    } finally {
+      setLoading(false)
+    }
+  }
+
   const handleExportExcel = async () => {
     if (!validateForm()) {
       alert('Por favor complete los campos obligatorios')
       return
     }
+    const dataToExport = previewData || formData
     setLoading(true)
     try {
-      await generarHojaVidaExcel(formData)
+      await generarHojaVidaExcel(dataToExport)
     } catch (error) {
       console.error('Error:', error)
       alert('Error al generar el archivo Excel')
@@ -113,9 +201,10 @@ export default function HojaVidaForm({ onBack }) {
       alert('Por favor complete los campos obligatorios')
       return
     }
+    const dataToExport = previewData || formData
     setLoading(true)
     try {
-      await generarHojaVidaPDF(formData)
+      await generarHojaVidaPDF(dataToExport)
     } catch (error) {
       console.error('Error:', error)
       alert('Error al generar el archivo PDF')
@@ -129,33 +218,21 @@ export default function HojaVidaForm({ onBack }) {
       alert('Por favor complete los campos obligatorios')
       return
     }
+    setPreviewData({ ...formData })
     setShowPreview(true)
   }
+  
+  const handlePreviewChange = (newData) => {
+    setPreviewData(newData)
+    setFormData(newData)
+  }
 
-  const InputField = ({ label, value, field, required, icon: Icon, ...props }) => (
-    <div>
-      <label className="block mb-1 text-sm font-medium text-green-300/90">
-        {label} {required && <span className="text-red-400">*</span>}
-      </label>
-      <input
-        type="text"
-        value={value}
-        onChange={(e) => {
-          setFormData({ ...formData, [field]: e.target.value.toUpperCase() })
-          if (errors[field]) {
-            setErrors({ ...errors, [field]: null })
-          }
-        }}
-        className={`w-full px-3 py-2 bg-slate-800/50 border rounded-lg text-white text-sm focus:outline-none focus:ring-2 uppercase ${
-          errors[field] 
-            ? 'border-red-500 focus:ring-red-400/50' 
-            : 'border-green-500/30 focus:ring-green-400/50'
-        }`}
-        {...props}
-      />
-      {errors[field] && <p className="text-red-400 text-xs mt-1">{errors[field]}</p>}
-    </div>
-  )
+  const updateField = (field, value) => {
+    setFormData(prev => ({ ...prev, [field]: value.toUpperCase() }))
+    if (errors[field]) {
+      setErrors(prev => ({ ...prev, [field]: null }))
+    }
+  }
 
   return (
     <CRUDBase 
@@ -200,16 +277,17 @@ export default function HojaVidaForm({ onBack }) {
           </h3>
         </div>
 
-        <InputField label="Área" value={formData.area} field="area" />
-        <InputField label="Nº Inventario" value={formData.inventario} field="inventario" required />
-        <InputField label="Marca" value={formData.marca} field="marca" required />
-        <InputField label="Modelo" value={formData.modelo} field="modelo" required />
-        <InputField label="Serial CPU" value={formData.serialCpu} field="serialCpu" required />
-        <InputField label="Procesador" value={formData.procesador} field="procesador" />
-        <InputField label="Velocidad" value={formData.velocidad} field="velocidad" />
-        <InputField label="Memoria RAM" value={formData.memoriaRam} field="memoriaRam" />
-        <InputField label="Disco Duro" value={formData.discoDuro} field="discoDuro" />
-        <InputField label="Tipo (ALL ONE/PORTATIL)" value={formData.tipoEquipo} field="tipoEquipo" />
+        <InputField label="Responsable" value={formData.responsable} field="responsable" errors={errors} onChange={updateField} />
+        <InputField label="Área" value={formData.area} field="area" errors={errors} onChange={updateField} />
+        <InputField label="Nº Inventario" value={formData.inventario} field="inventario" required errors={errors} onChange={updateField} />
+        <InputField label="Marca" value={formData.marca} field="marca" required errors={errors} onChange={updateField} />
+        <InputField label="Modelo" value={formData.modelo} field="modelo" required errors={errors} onChange={updateField} />
+        <InputField label="Serial CPU" value={formData.serialCpu} field="serialCpu" required errors={errors} onChange={updateField} />
+        <InputField label="CPU" value={formData.cpu} field="cpu" errors={errors} onChange={updateField} />
+        <InputField label="Procesador" value={formData.procesador} field="procesador" errors={errors} onChange={updateField} />
+        <InputField label="Velocidad" value={formData.velocidad} field="velocidad" errors={errors} onChange={updateField} />
+        <InputField label="Memoria RAM" value={formData.memoriaRam} field="memoriaRam" errors={errors} onChange={updateField} />
+        <InputField label="Disco Duro" value={formData.discoDuro} field="discoDuro" errors={errors} onChange={updateField} />
 
         <div className="lg:col-span-3">
           <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
@@ -218,10 +296,10 @@ export default function HojaVidaForm({ onBack }) {
           </h3>
         </div>
 
-        <InputField label="Nombre del Equipo" value={formData.nombreEquipo} field="nombreEquipo" />
-        <InputField label="En Red (SI/NO)" value={formData.enRed} field="enRed" />
-        <InputField label="Dirección IP" value={formData.direccionIp} field="direccionIp" />
-        <InputField label="MAC" value={formData.mac} field="mac" />
+        <InputField label="Nombre del Equipo" value={formData.nombreEquipo} field="nombreEquipo" errors={errors} onChange={updateField} />
+        
+        <InputField label="Dirección IP" value={formData.direccionIp} field="direccionIp" errors={errors} onChange={updateField} />
+        <InputField label="MAC" value={formData.mac} field="mac" errors={errors} onChange={updateField} />
 
         <div className="lg:col-span-3">
           <h3 className="text-lg font-semibold text-white mb-4">
@@ -229,7 +307,7 @@ export default function HojaVidaForm({ onBack }) {
           </h3>
         </div>
 
-        <InputField label="Sistema Operativo" value={formData.sistemaOperativo} field="sistemaOperativo" />
+        <InputField label="Sistema Operativo" value={formData.sistemaOperativo} field="sistemaOperativo" errors={errors} onChange={updateField} />
 
         <div className="lg:col-span-3">
           <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
@@ -238,9 +316,9 @@ export default function HojaVidaForm({ onBack }) {
           </h3>
         </div>
 
-        <InputField label="Marca y/o Modelo Monitor" value={formData.monitorMarca} field="monitorMarca" />
-        <InputField label="Serial Monitor" value={formData.monitorSerial} field="monitorSerial" />
-        <InputField label="Placa Monitor" value={formData.monitorPlaca} field="monitorPlaca" />
+        <InputField label="Marca y/o Modelo Monitor" value={formData.monitorMarca} field="monitorMarca" errors={errors} onChange={updateField} />
+        <InputField label="Serial Monitor" value={formData.monitorSerial} field="monitorSerial" errors={errors} onChange={updateField} />
+        <InputField label="Placa Monitor" value={formData.monitorPlaca} field="monitorPlaca" errors={errors} onChange={updateField} />
 
         <div className="lg:col-span-3">
           <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
@@ -249,9 +327,9 @@ export default function HojaVidaForm({ onBack }) {
           </h3>
         </div>
 
-        <InputField label="Marca y/o Modelo Teclado" value={formData.tecladoMarca} field="tecladoMarca" />
-        <InputField label="Serial Teclado" value={formData.tecladoSerial} field="tecladoSerial" />
-        <InputField label="Placa Teclado" value={formData.tecladoPlaca} field="tecladoPlaca" />
+        <InputField label="Marca y/o Modelo Teclado" value={formData.tecladoMarca} field="tecladoMarca" errors={errors} onChange={updateField} />
+        <InputField label="Serial Teclado" value={formData.tecladoSerial} field="tecladoSerial" errors={errors} onChange={updateField} />
+        <InputField label="Placa Teclado" value={formData.tecladoPlaca} field="tecladoPlaca" errors={errors} onChange={updateField} />
 
         <div className="lg:col-span-3">
           <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
@@ -260,9 +338,9 @@ export default function HojaVidaForm({ onBack }) {
           </h3>
         </div>
 
-        <InputField label="Marca y/o Modelo Mouse" value={formData.mouseMarca} field="mouseMarca" />
-        <InputField label="Serial Mouse" value={formData.mouseSerial} field="mouseSerial" />
-        <InputField label="Placa Mouse" value={formData.mousePlaca} field="mousePlaca" />
+        <InputField label="Marca y/o Modelo Mouse" value={formData.mouseMarca} field="mouseMarca" errors={errors} onChange={updateField} />
+        <InputField label="Serial Mouse" value={formData.mouseSerial} field="mouseSerial" errors={errors} onChange={updateField} />
+        <InputField label="Placa Mouse" value={formData.mousePlaca} field="mousePlaca" errors={errors} onChange={updateField} />
       </div>
 
       <div className="mt-8 flex flex-wrap justify-end gap-4">
@@ -289,6 +367,14 @@ export default function HojaVidaForm({ onBack }) {
         >
           <FileSpreadsheet size={18} />
           {loading ? 'Generando...' : 'Exportar Excel'}
+        </Button>
+        <Button 
+          onClick={handleSaveToDatabase}
+          disabled={loading}
+          className="flex items-center gap-2 bg-green-600 hover:bg-green-700"
+        >
+          <Save size={18} />
+          {loading ? 'Guardando...' : 'Guardar en BD'}
         </Button>
       </div>
 
@@ -318,7 +404,7 @@ export default function HojaVidaForm({ onBack }) {
       </Modal>
 
       <Modal isOpen={showPreview} onClose={() => setShowPreview(false)} title="Vista Previa - Hoja de Vida" size="xl">
-        <HojaVidaPreview data={formData} />
+        <HojaVidaPreview data={previewData || formData} onChange={handlePreviewChange} />
         <div className="mt-6 flex justify-end gap-4">
           <Button variant="secondary" onClick={() => setShowPreview(false)}>
             Cerrar

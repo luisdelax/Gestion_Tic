@@ -18,13 +18,16 @@
     "cookie": "^1.1.1",
     "framer-motion": "^11.3.8",
     "jsonwebtoken": "^9.0.2",
+    "jspdf": "^4.1.0",
+    "jspdf-autotable": "^5.0.7",
     "lucide-react": "^0.411.0",
     "next": "^16.1.6",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-hook-form": "^7.52.1",
     "react-hot-toast": "^2.4.1",
-    "recharts": "^2.12.7"
+    "recharts": "^2.12.7",
+    "xlsx": "^0.18.5"
   },
   "devDependencies": {
     "@types/bcryptjs": "^2.4.6",

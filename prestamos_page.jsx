@@ -342,15 +342,7 @@ export default function PrestamosPage() {
           data={prestamos} 
           onEdit={handleEdit}
           onDelete={handleDelete}
-          searchFields={['estado', 'observaciones']}
-          searchFn={(row, search) => {
-            const s = search.toLowerCase()
-            if (row.usuario && (`${row.usuario.nombre} ${row.usuario.apellido}`.toLowerCase().includes(s) || row.usuario.cedula?.toLowerCase().includes(s))) return true
-            if (row.equipoComputo && (`${row.equipoComputo.marca} ${row.equipoComputo.modelo}`.toLowerCase().includes(s) || row.equipoComputo.placa?.toLowerCase().includes(s) || row.equipoComputo.serial?.toLowerCase().includes(s))) return true
-            if (row.periferico && (`${row.periferico.marca} ${row.periferico.tipo}`.toLowerCase().includes(s) || row.periferico.serial?.toLowerCase().includes(s))) return true
-            if (row.audiovisual && (`${row.audiovisual.marca} ${row.audiovisual.tipo}`.toLowerCase().includes(s) || row.audiovisual.serial?.toLowerCase().includes(s))) return true
-            return false
-          }}
+          searchFields={['estado', 'observaciones', 'usuario', 'equipoComputo']}
         />
       )}
 

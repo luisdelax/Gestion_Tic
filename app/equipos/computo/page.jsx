@@ -444,22 +444,13 @@ export default function EquiposComputoPage() {
               onChange={(e) => setFormData({...formData, ram: e.target.value})} 
               options={OPCIONES_RAM} 
             />
-            <div className="grid grid-cols-2 gap-2">
-              <Input 
-                label="Disco Duro" 
-                type="select" 
-                value={formData.discoDuro} 
-                onChange={(e) => setFormData({...formData, discoDuro: e.target.value})} 
-                options={OPCIONES_DISCO} 
-              />
-              <Input 
-                label="Unidad Disco" 
-                type="select" 
-                value={formData.unidadDisco} 
-                onChange={(e) => setFormData({...formData, unidadDisco: e.target.value})} 
-                options={UNIDADES_ALMACENAMIENTO} 
-              />
-            </div>
+            <Input 
+              label="Disco Duro" 
+              type="select" 
+              value={formData.discoDuro} 
+              onChange={(e) => setFormData({...formData, discoDuro: e.target.value})} 
+              options={OPCIONES_DISCO} 
+            />
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -529,7 +520,13 @@ export default function EquiposComputoPage() {
             
             {showResponsableList && funcionarios.length > 0 && (
               <div className="absolute z-10 w-full mt-1 bg-slate-800 border border-green-500/30 rounded-lg max-h-48 overflow-y-auto">
-                {funcionarios.slice(0, 8).map((func) => (
+                {funcionarios
+                  .filter(f => !searchResponsable || 
+                    `${f.nombre} ${f.apellido}`.toLowerCase().includes(searchResponsable.toLowerCase()) ||
+                    f.cedula?.toLowerCase().includes(searchResponsable.toLowerCase())
+                  )
+                  .slice(0, 8)
+                  .map((func) => (
                   <button
                     key={func.id}
                     type="button"
