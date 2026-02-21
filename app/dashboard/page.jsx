@@ -205,8 +205,6 @@ export default function Dashboard() {
     { icon: Settings, label: 'Configuración', href: '/configuracion', roles: ['Administrador', 'Superusuario', 'TecnicoN1'] },
   ]
 
-  const menuItems = allMenuItems.filter(item => user && item.roles.includes(user.rol))
-
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-slate-900">
@@ -218,6 +216,8 @@ export default function Dashboard() {
       </div>
     )
   }
+
+  const menuItems = allMenuItems.filter(item => user && item.roles.includes(user.rol))
 
   return (
     <div className="min-h-screen bg-slate-900 flex">

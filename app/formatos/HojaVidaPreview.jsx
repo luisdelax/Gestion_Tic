@@ -47,7 +47,7 @@ export default function HojaVidaPreview({ data, onChange }) {
   
   return (
     <div className="bg-white p-2 text-black overflow-auto max-h-[70vh]">
-      <div style={{ minWidth: '750px' }}>
+      <div id="hoja-vida-preview" style={{ minWidth: '750px' }}>
         <table style={{ width: '100%', borderCollapse: 'collapse', border: '1px solid #000' }}>
           <tbody>
             <tr>

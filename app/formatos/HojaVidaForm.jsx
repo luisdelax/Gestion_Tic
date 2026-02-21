@@ -2,8 +2,8 @@
 
 import { useState, useEffect } from 'react'
 import CRUDBase, { Button, Modal } from '@/components/CRUDBase'
-import { ArrowLeft, Save, FileSpreadsheet, FileText, Search, Monitor, Keyboard, Mouse, Cpu, Eye, X, File } from 'lucide-react'
-import { generarHojaVidaExcel, generarHojaVidaPDF } from '@/lib/exportExcel'
+import { ArrowLeft, Save, FileText, Search, Monitor, Keyboard, Mouse, Cpu, Eye, X, File } from 'lucide-react'
+import { generarHojaVidaPDF } from '@/lib/exportExcel'
 import HojaVidaPreview from './HojaVidaPreview'
 
 function InputField({ label, value, field, required, errors = {}, onChange }) {
@@ -33,7 +33,7 @@ function InputField({ label, value, field, required, errors = {}, onChange }) {
   )
 }
 
-export default function HojaVidaForm({ onBack }) {
+export default function HojaVidaForm({ onBack, editData }) {
   const [loading, setLoading] = useState(false)
   const [buscando, setBuscando] = useState(false)
   const [equipos, setEquipos] = useState([])
@@ -42,9 +42,11 @@ export default function HojaVidaForm({ onBack }) {
   const [showModal, setShowModal] = useState(false)
   const [showPreview, setShowPreview] = useState(false)
   const [previewData, setPreviewData] = useState(null)
-  const [errors, setErrors] = useState({})
+  const [errors, setErrors] = useState([])
+  const isEditing = !!editData
   
   const [formData, setFormData] = useState({
+    id: null,
     responsable: '',
     area: '',
     inventario: '',
@@ -72,6 +74,40 @@ export default function HojaVidaForm({ onBack }) {
     mouseSerial: '',
     mousePlaca: '',
   })
+
+  useEffect(() => {
+    if (editData) {
+      setFormData({
+        id: editData.id,
+        responsable: editData.responsable || '',
+        area: editData.area || '',
+        inventario: editData.inventario || '',
+        marca: editData.marca || '',
+        modelo: editData.modelo || '',
+        serialCpu: editData.serialCpu || '',
+        cpu: editData.cpu || '',
+        procesador: editData.procesador || '',
+        velocidad: editData.velocidad || '',
+        memoriaRam: editData.memoriaRam ? (editData.memoriaRam.includes('GB') ? editData.memoriaRam : `${editData.memoriaRam} GB`) : '',
+        discoDuro: editData.discoDuro ? (editData.discoDuro.includes('GB') ? editData.discoDuro : `${editData.discoDuro} GB`) : '',
+        tipoEquipo: editData.tipoEquipo || '',
+        nombreEquipo: editData.nombreEquipo || '',
+        enRed: editData.enRed || '',
+        direccionIp: editData.direccionIp || '',
+        mac: editData.mac || '',
+        sistemaOperativo: editData.sistemaOperativo || '',
+        monitorMarca: editData.monitorMarca || '',
+        monitorSerial: editData.monitorSerial || '',
+        monitorPlaca: editData.monitorPlaca || '',
+        tecladoMarca: editData.tecladoMarca || '',
+        tecladoSerial: editData.tecladoSerial || '',
+        tecladoPlaca: editData.tecladoPlaca || '',
+        mouseMarca: editData.mouseMarca || '',
+        mouseSerial: editData.mouseSerial || '',
+        mousePlaca: editData.mousePlaca || '',
+      })
+    }
+  }, [editData])
 
   const validateForm = () => {
     const newErrors = {}
@@ -110,8 +146,8 @@ export default function HojaVidaForm({ onBack }) {
       modelo: equipo.modelo || '',
       serialCpu: equipo.serial || '',
       procesador: equipo.procesador || '',
-      memoriaRam: equipo.ram || '',
-      discoDuro: equipo.discoDuro || '',
+      memoriaRam: equipo.ram ? `${equipo.ram} GB` : '',
+      discoDuro: equipo.discoDuro ? `${equipo.discoDuro} GB` : '',
       tipoEquipo: equipo.tipo || '',
       nombreEquipo: '',
       enRed: '',
@@ -130,43 +166,49 @@ export default function HojaVidaForm({ onBack }) {
     const dataToSave = previewData || formData
     setLoading(true)
     try {
-      const res = await fetch('/api/formatos', {
-        method: 'POST',
+      const url = '/api/formatos'
+      const method = isEditing ? 'PUT' : 'POST'
+      const res = await fetch(url, {
+        method,
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
         body: JSON.stringify(dataToSave)
       })
       if (res.ok) {
-        alert('Hoja de vida guardada correctamente')
+        alert(isEditing ? 'Hoja de vida actualizada correctamente' : 'Hoja de vida guardada correctamente')
         setPreviewData(null)
-        setFormData({
-          responsable: '',
-          area: '',
-          inventario: '',
-          marca: '',
-          modelo: '',
-          serialCpu: '',
-          cpu: '',
-          procesador: '',
-          velocidad: '',
-          memoriaRam: '',
-          discoDuro: '',
-          tipoEquipo: '',
-          nombreEquipo: '',
-          enRed: '',
-          direccionIp: '',
-          mac: '',
-          sistemaOperativo: '',
-          monitorMarca: '',
-          monitorSerial: '',
-          monitorPlaca: '',
-          tecladoMarca: '',
-          tecladoSerial: '',
-          tecladoPlaca: '',
-          mouseMarca: '',
-          mouseSerial: '',
-          mousePlaca: '',
-        })
+        if (isEditing) {
+          onBack()
+        } else {
+          setFormData({
+            responsable: '',
+            area: '',
+            inventario: '',
+            marca: '',
+            modelo: '',
+            serialCpu: '',
+            cpu: '',
+            procesador: '',
+            velocidad: '',
+            memoriaRam: '',
+            discoDuro: '',
+            tipoEquipo: '',
+            nombreEquipo: '',
+            enRed: '',
+            direccionIp: '',
+            mac: '',
+            sistemaOperativo: '',
+            monitorMarca: '',
+            monitorSerial: '',
+            monitorPlaca: '',
+            tecladoMarca: '',
+            tecladoSerial: '',
+            tecladoPlaca: '',
+            mouseMarca: '',
+            mouseSerial: '',
+            mousePlaca: '',
+          })
+        }
         setShowPreview(false)
       } else {
         alert('Error al guardar')
@@ -179,32 +221,15 @@ export default function HojaVidaForm({ onBack }) {
     }
   }
 
-  const handleExportExcel = async () => {
-    if (!validateForm()) {
+  const handleExportPDF = async (elementId = null) => {
+    if (!elementId && !validateForm()) {
       alert('Por favor complete los campos obligatorios')
       return
     }
     const dataToExport = previewData || formData
     setLoading(true)
     try {
-      await generarHojaVidaExcel(dataToExport)
-    } catch (error) {
-      console.error('Error:', error)
-      alert('Error al generar el archivo Excel')
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  const handleExportPDF = async () => {
-    if (!validateForm()) {
-      alert('Por favor complete los campos obligatorios')
-      return
-    }
-    const dataToExport = previewData || formData
-    setLoading(true)
-    try {
-      await generarHojaVidaPDF(dataToExport)
+      await generarHojaVidaPDF(dataToExport, elementId)
     } catch (error) {
       console.error('Error:', error)
       alert('Error al generar el archivo PDF')
@@ -361,14 +386,6 @@ export default function HojaVidaForm({ onBack }) {
           {loading ? 'Generando...' : 'Exportar PDF'}
         </Button>
         <Button 
-          onClick={handleExportExcel}
-          disabled={loading}
-          className="flex items-center gap-2"
-        >
-          <FileSpreadsheet size={18} />
-          {loading ? 'Generando...' : 'Exportar Excel'}
-        </Button>
-        <Button 
           onClick={handleSaveToDatabase}
           disabled={loading}
           className="flex items-center gap-2 bg-green-600 hover:bg-green-700"
@@ -409,13 +426,9 @@ export default function HojaVidaForm({ onBack }) {
           <Button variant="secondary" onClick={() => setShowPreview(false)}>
             Cerrar
           </Button>
-          <Button onClick={handleExportPDF} className="flex items-center gap-2">
+          <Button onClick={() => handleExportPDF('hoja-vida-preview')} className="flex items-center gap-2">
             <FileText size={18} />
             Exportar PDF
-          </Button>
-          <Button onClick={handleExportExcel} className="flex items-center gap-2">
-            <FileSpreadsheet size={18} />
-            Exportar Excel
           </Button>
         </div>
       </Modal>
